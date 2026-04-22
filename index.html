@@ -284,6 +284,103 @@
     .cta-btn:hover { opacity: .85; }
     .cta-btn.copied { background: #4ADE80; }
 
+    /* discount row */
+    .discount-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 16px;
+      padding-top: 14px;
+      border-top: 1px solid #242424;
+    }
+    .discount-row label {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 500;
+    }
+    .discount-input-wrap {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .discount-input-wrap input {
+      width: 64px;
+      padding: 5px 8px;
+      background: #222;
+      border: 1.5px solid #333;
+      border-radius: 6px;
+      color: var(--text);
+      font-size: 13px;
+      font-family: inherit;
+      text-align: right;
+      -moz-appearance: textfield;
+      transition: border-color .15s;
+    }
+    .discount-input-wrap input::-webkit-outer-spin-button,
+    .discount-input-wrap input::-webkit-inner-spin-button { -webkit-appearance: none; }
+    .discount-input-wrap input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+    .discount-input-wrap span {
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .srow-original {
+      font-size: 11px;
+      color: var(--muted);
+      text-decoration: line-through;
+      margin-right: 6px;
+    }
+
+    /* tooltip */
+    .tooltip-wrap {
+      display: inline-flex;
+      align-items: center;
+    }
+    .tooltip-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #2A2A2A;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 700;
+      cursor: default;
+      margin-left: 8px;
+      flex-shrink: 0;
+      transition: background .15s, color .15s;
+    }
+    .tooltip-icon:hover { background: var(--accent); color: #0F0F0F; }
+
+    #global-tooltip {
+      display: none;
+      position: fixed;
+      width: 300px;
+      background: #222;
+      border: 1px solid #333;
+      border-radius: 10px;
+      padding: 14px 16px;
+      font-size: 13px;
+      line-height: 1.6;
+      color: #D1D5DB;
+      z-index: 9999;
+      box-shadow: 0 8px 32px rgba(0,0,0,.6);
+      pointer-events: none;
+    }
+    #global-tooltip::after {
+      content: '';
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      border: 6px solid transparent;
+      border-top-color: #333;
+    }
+
     /* industry selector */
     .industry-bar {
       background: #111;
@@ -463,6 +560,13 @@
           <span>250</span>
           <span>1 200 000</span>
         </div>
+        <div class="discount-row">
+          <label>Rabat</label>
+          <div class="discount-input-wrap">
+            <input type="number" id="licDiscount" min="0" max="100" placeholder="0" />
+            <span>%</span>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -595,7 +699,7 @@
         <div class="mcard-head-row">
           <div>
             <div class="mcard-title">edrone AI chat</div>
-            <div class="mcard-desc">Chatbot oparty na AI. Opłata stała 49 zł + 8 zł za każde 1 000 wizyt.</div>
+            <div class="mcard-desc">Opłata stała 49 zł + 2 zł za konwersację.</div>
           </div>
           <div class="badge-optional">Opcjonalny</div>
         </div>
@@ -635,8 +739,13 @@
       <div class="mcard-head">
         <div class="mcard-head-row">
           <div>
-            <div class="mcard-title">Ramki rekomendacji AI</div>
-            <div class="mcard-desc">Personalizowane ramki produktowe oparte na AI. Opłata stała 49 zł + 6 zł za każde 1 000 wyświetleń.</div>
+            <div class="mcard-title" style="display:flex;align-items:center">
+              Ramki rekomendacji AI
+              <span class="tooltip-wrap">
+                <span class="tooltip-icon" data-tooltip="rf">i</span>
+              </span>
+            </div>
+            <div class="mcard-desc">Szacunkowy koszt miesięczny Ramek w zależności od ruchu na stronie klienta.</div>
           </div>
           <div class="badge-optional">Opcjonalny</div>
         </div>
@@ -818,6 +927,7 @@ const LIC_SNAPS = LICENSE_TIERS.map(t => t[1]);
 // SMS snaps: representative values within each tier
 const SMS_SNAPS = [
   0,
+  250, 500, 750,
   1000, 2000, 3000, 4000, 5000,
   6000, 7000, 8000, 9000, 10000,
   15000, 20000, 30000, 40000, 50000,
@@ -827,7 +937,9 @@ const SMS_SNAPS = [
 // WhatsApp snaps
 const WA_SNAPS = [
   0,
-  1000, 2000, 3000, 5000, 7500, 10000,
+  250, 500, 750,
+  1000, 2000, 3000, 4000, 5000,
+  6000, 7000, 8000, 9000, 10000,
 ];
 
 const INDUSTRY_MULTIPLIERS = {
@@ -951,6 +1063,24 @@ initSlider('rfSlider', RF_SNAPS);
 
 let state = { lic: 0, sms: 0, wa: 0, rec: 0, ai: 0, rf: 0, smsOn: true, waOn: true, recOn: true, aiOn: true, rfOn: true };
 
+// ── Helpers: discount ─────────────────────────────────────────────────────
+
+function getDiscount(id) {
+  return Math.min(Math.max(parseFloat(document.getElementById(id).value) || 0, 0), 100);
+}
+function applyDisc(price, pct) {
+  return Math.round(price * (1 - pct / 100) * 100) / 100;
+}
+function setSumValue(elId, original, discounted, discPct) {
+  const el = document.getElementById(elId);
+  if (discPct > 0) {
+    el.innerHTML = `<span class="srow-original">${fmt(original)}</span>${fmt(discounted)}`;
+  } else {
+    el.textContent = fmt(discounted);
+  }
+  el.className = 'srow-value';
+}
+
 // ── Recalculate ───────────────────────────────────────────────────────────
 
 function recalc() {
@@ -959,11 +1089,13 @@ function recalc() {
   const licMax = LIC_SNAPS[licIdx];
   const licMin = licIdx === 0 ? 0 : LICENSE_TIERS[licIdx][0];
   const licPrice = LICENSE_TIERS[licIdx][2];
-  state.lic = licPrice;
+  const licDisc = getDiscount('licDiscount');
+  const licFinal = applyDisc(licPrice, licDisc);
+  state.lic = licFinal;
 
   const licLabel = licIdx === 0 ? `do ${fmtInt(licMax)}` : `${fmtInt(licMin)} – ${fmtInt(licMax)}`;
   document.getElementById('licRangeLabel').textContent = licLabel;
-  document.getElementById('licPriceDisplay').textContent = fmt(licPrice);
+  document.getElementById('licPriceDisplay').textContent = fmt(licFinal);
   setFill(document.getElementById('licSlider'), document.getElementById('licFill'));
 
   // SMS
@@ -972,11 +1104,11 @@ function recalc() {
   const smsIdx = parseInt(document.getElementById('smsSlider').value);
   const smsCount = SMS_SNAPS[smsIdx];
   const smsRate = smsCount > 0 ? getRate(smsCount, SMS_TIERS) : 0;
-  const smsTotal = Math.round(smsCount * smsRate * 100) / 100;
-  state.sms = smsOn ? smsTotal : 0;
+  const smsBase = Math.round(smsCount * smsRate * 100) / 100;
+  state.sms = smsOn ? smsBase : 0;
 
   document.getElementById('smsRangeLabel').textContent = fmtInt(smsCount);
-  document.getElementById('smsPriceDisplay').textContent = fmt(smsTotal);
+  document.getElementById('smsPriceDisplay').textContent = fmt(smsBase);
   document.getElementById('smsBody').className = 'mcard-body' + (smsOn ? '' : ' disabled');
   setFill(document.getElementById('smsSlider'), document.getElementById('smsFill'));
 
@@ -986,23 +1118,62 @@ function recalc() {
   const waIdx = parseInt(document.getElementById('waSlider').value);
   const waCount = WA_SNAPS[waIdx];
   const waRate = waCount > 0 ? getRate(waCount, WA_TIERS) : 0;
-  const waTotal = Math.round(waCount * waRate * 100) / 100;
-  state.wa = waOn ? waTotal : 0;
+  const waBase = Math.round(waCount * waRate * 100) / 100;
+  state.wa = waOn ? waBase : 0;
 
   document.getElementById('waRangeLabel').textContent = fmtInt(waCount);
-  document.getElementById('waPriceDisplay').textContent = fmt(waTotal);
+  document.getElementById('waPriceDisplay').textContent = fmt(waBase);
   document.getElementById('waBody').className = 'mcard-body' + (waOn ? '' : ' disabled');
   setFill(document.getElementById('waSlider'), document.getElementById('waFill'));
+
+  // edrone Reviews
+  const recOn = document.getElementById('recToggle').checked;
+  state.recOn = recOn;
+  const recIdx = parseInt(document.getElementById('recSlider').value);
+  const recCount = REC_SNAPS[recIdx];
+  const recBase = calcRecPrice(recCount);
+  state.rec = recOn ? recBase : 0;
+
+  document.getElementById('recRangeLabel').textContent = fmtInt(recCount);
+  document.getElementById('recPriceDisplay').textContent = fmt(recBase);
+  document.getElementById('recBody').className = 'mcard-body' + (recOn ? '' : ' disabled');
+  setFill(document.getElementById('recSlider'), document.getElementById('recFill'));
+
+  // edrone AI chat
+  const aiOn = document.getElementById('aiToggle').checked;
+  state.aiOn = aiOn;
+  const aiIdx = parseInt(document.getElementById('aiSlider').value);
+  const aiCount = AI_SNAPS[aiIdx];
+  const aiBase = calcAiPrice(aiCount);
+  state.ai = aiOn ? aiBase : 0;
+
+  document.getElementById('aiRangeLabel').textContent = fmtInt(aiCount);
+  document.getElementById('aiPriceDisplay').textContent = fmt(aiBase);
+  document.getElementById('aiBody').className = 'mcard-body' + (aiOn ? '' : ' disabled');
+  setFill(document.getElementById('aiSlider'), document.getElementById('aiFill'));
+
+  // Ramki rekomendacji AI
+  const rfOn = document.getElementById('rfToggle').checked;
+  state.rfOn = rfOn;
+  const rfIdx = parseInt(document.getElementById('rfSlider').value);
+  const rfCount = RF_SNAPS[rfIdx];
+  const rfBase = calcRfPrice(rfCount);
+  state.rf = rfOn ? rfBase : 0;
+
+  document.getElementById('rfRangeLabel').textContent = fmtInt(rfCount);
+  document.getElementById('rfPriceDisplay').textContent = fmt(rfBase);
+  document.getElementById('rfBody').className = 'mcard-body' + (rfOn ? '' : ' disabled');
+  setFill(document.getElementById('rfSlider'), document.getElementById('rfFill'));
 
   // Stats
   const industry = document.getElementById('industrySelect').value;
   const multiplier = INDUSTRY_MULTIPLIERS[industry];
   const statsSection = document.getElementById('statsSection');
+  const total = state.lic + state.sms + state.wa + state.rec + state.ai + state.rf;
 
   if (industry && multiplier) {
     const revenue = Math.round((licMax / 1000) * multiplier);
-    const roi = Math.round((revenue / (state.lic + state.sms + state.wa + state.rec + state.ai + state.rf)) * 100);
-
+    const roi = total > 0 ? Math.round((revenue / total) * 100) : 0;
     document.getElementById('statRevenue').textContent = fmt(revenue);
     document.getElementById('statRoi').textContent = roi.toLocaleString('pl-PL') + '%';
     document.getElementById('statsPretitle').textContent =
@@ -1013,13 +1184,11 @@ function recalc() {
   }
 
   // Summary
-  const total = state.lic + state.sms + state.wa + state.rec + state.ai + state.rf;
-
   document.getElementById('summaryTotal').textContent = fmt(total);
   document.getElementById('summaryTotalBig').textContent = fmt(total);
 
-  document.getElementById('sumLic').textContent = fmt(state.lic);
-  document.getElementById('sumLicSub').textContent = licLabel + ' kontaktów';
+  setSumValue('sumLic', licPrice, licFinal, licDisc);
+  document.getElementById('sumLicSub').textContent = licLabel + ' kontaktów' + (licDisc > 0 ? ` (−${licDisc}%)` : '');
 
   if (smsOn) {
     document.getElementById('sumSms').textContent = fmt(state.sms);
@@ -1041,19 +1210,6 @@ function recalc() {
     document.getElementById('sumWaSub').textContent = '';
   }
 
-  // edrone Reviews
-  const recOn = document.getElementById('recToggle').checked;
-  state.recOn = recOn;
-  const recIdx = parseInt(document.getElementById('recSlider').value);
-  const recCount = REC_SNAPS[recIdx];
-  const recTotal = calcRecPrice(recCount);
-  state.rec = recOn ? recTotal : 0;
-
-  document.getElementById('recRangeLabel').textContent = fmtInt(recCount);
-  document.getElementById('recPriceDisplay').textContent = fmt(recTotal);
-  document.getElementById('recBody').className = 'mcard-body' + (recOn ? '' : ' disabled');
-  setFill(document.getElementById('recSlider'), document.getElementById('recFill'));
-
   if (recOn) {
     document.getElementById('sumRec').textContent = recCount === 0 ? fmt(0) : fmt(state.rec);
     document.getElementById('sumRec').className = 'srow-value';
@@ -1064,19 +1220,6 @@ function recalc() {
     document.getElementById('sumRecSub').textContent = '';
   }
 
-  // edrone AI chat
-  const aiOn = document.getElementById('aiToggle').checked;
-  state.aiOn = aiOn;
-  const aiIdx = parseInt(document.getElementById('aiSlider').value);
-  const aiCount = AI_SNAPS[aiIdx];
-  const aiTotal = calcAiPrice(aiCount);
-  state.ai = aiOn ? aiTotal : 0;
-
-  document.getElementById('aiRangeLabel').textContent = fmtInt(aiCount);
-  document.getElementById('aiPriceDisplay').textContent = fmt(aiTotal);
-  document.getElementById('aiBody').className = 'mcard-body' + (aiOn ? '' : ' disabled');
-  setFill(document.getElementById('aiSlider'), document.getElementById('aiFill'));
-
   if (aiOn) {
     document.getElementById('sumAi').textContent = aiCount === 0 ? fmt(0) : fmt(state.ai);
     document.getElementById('sumAi').className = 'srow-value';
@@ -1086,19 +1229,6 @@ function recalc() {
     document.getElementById('sumAi').className = 'srow-value off';
     document.getElementById('sumAiSub').textContent = '';
   }
-
-  // Ramki rekomendacji AI
-  const rfOn = document.getElementById('rfToggle').checked;
-  state.rfOn = rfOn;
-  const rfIdx = parseInt(document.getElementById('rfSlider').value);
-  const rfCount = RF_SNAPS[rfIdx];
-  const rfTotal = calcRfPrice(rfCount);
-  state.rf = rfOn ? rfTotal : 0;
-
-  document.getElementById('rfRangeLabel').textContent = fmtInt(rfCount);
-  document.getElementById('rfPriceDisplay').textContent = fmt(rfTotal);
-  document.getElementById('rfBody').className = 'mcard-body' + (rfOn ? '' : ' disabled');
-  setFill(document.getElementById('rfSlider'), document.getElementById('rfFill'));
 
   if (rfOn) {
     document.getElementById('sumRf').textContent = rfCount === 0 ? fmt(0) : fmt(state.rf);
@@ -1120,6 +1250,7 @@ function recalc() {
   document.getElementById(id).addEventListener('change', recalc)
 );
 document.getElementById('industrySelect').addEventListener('change', recalc);
+document.getElementById('licDiscount').addEventListener('input', recalc);
 
 recalc();
 
@@ -1170,6 +1301,31 @@ function copyQuote() {
     setTimeout(() => { btn.textContent = 'Skopiuj wycenę'; btn.classList.remove('copied'); }, 2500);
   });
 }
+</script>
+
+<div id="global-tooltip"></div>
+
+<script>
+const TOOLTIP_CONTENT = {
+  rf: 'Płacisz wyłącznie za sprzedaż, którą ramka realnie przyniosła. Gdy klient kliknie produkt w ramce rekomendacji i kupi jakikolwiek produkt w ciągu 30 dni, płacisz 2,5% od tego zamówienia.\n\nObowiązuje minimalna opłata miesięczna — prowizja się do niej zalicza. Jeśli prowizja przekroczy minimum, nadwyżka przejdzie na następny miesiąc.'
+};
+
+const gt = document.getElementById('global-tooltip');
+
+document.querySelectorAll('.tooltip-icon[data-tooltip]').forEach(icon => {
+  icon.addEventListener('mouseenter', e => {
+    const key = icon.dataset.tooltip;
+    gt.innerHTML = TOOLTIP_CONTENT[key].replace(/\n\n/g, '<br><br>');
+    gt.style.display = 'block';
+    const r = icon.getBoundingClientRect();
+    const gtW = 300;
+    let left = r.left + r.width / 2 - gtW / 2;
+    left = Math.max(12, Math.min(left, window.innerWidth - gtW - 12));
+    gt.style.left = left + 'px';
+    gt.style.top = (r.top - gt.offsetHeight - 12) + 'px';
+  });
+  icon.addEventListener('mouseleave', () => { gt.style.display = 'none'; });
+});
 </script>
 </body>
 </html>
