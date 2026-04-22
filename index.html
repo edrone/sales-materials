@@ -866,6 +866,12 @@
         <div class="stat-label">ROI z edrone</div>
         <div class="stat-desc">Stosunek potencjalnego obrotu do miesięcznego kosztu licencji</div>
       </div>
+      <div class="stat-divider"></div>
+      <div class="stat-block">
+        <div class="stat-value" id="statTtr">—</div>
+        <div class="stat-label">Time to ROI</div>
+        <div class="stat-desc">Mediana czasu (dni) do osiągnięcia ROI w tej branży i przedziale bazy</div>
+      </div>
     </div>
     <div class="stats-note">Wartości szacunkowe, obliczone na podstawie średnich danych branżowych edrone.</div>
   </div>
@@ -968,6 +974,52 @@ const INDUSTRY_MULTIPLIERS = {
   'Akcesoria podróżne': 1448,
   'Pojazdy i części': 1993,
 };
+
+// Time-to-ROI medians (days) per industry × database size band
+// Source: customer data export, median of accounts with ROI date
+const TTR_DATA = {
+  'Zwierzęta i akcesoria dla zwierząt': {'0-1k':32,'1-5k':50,'5-10k':57,'10-20k':47,'20-30k':59,'30-50k':14,'50-80k':38,'80-100k':114,'100-150k':414,'150-200k':149,'over 500k':74},
+  'Sztuka i rozrywka': {'0-1k':57,'1-5k':10,'5-10k':44,'10-20k':42,'20-30k':17,'30-50k':29,'50-80k':150,'350-500k':74},
+  'Artykuły dla dorosłych': {'1-5k':44,'5-10k':138,'10-20k':161,'30-50k':23},
+  'Biznes i przemysł': {'0-1k':19,'1-5k':39,'5-10k':18,'10-20k':24,'20-30k':12,'30-50k':58,'50-80k':54},
+  'Ubrania i akcesoria': {'0-1k':76,'1-5k':25,'5-10k':41,'10-20k':27,'20-30k':27,'30-50k':42,'50-80k':27,'80-100k':18,'100-150k':29,'150-200k':42,'200-250k':20,'250-350k':44,'350-500k':52,'over 500k':27},
+  'Elektronika': {'0-1k':7,'1-5k':35,'5-10k':52,'10-20k':46,'20-30k':354,'30-50k':136,'50-80k':106,'80-100k':148,'250-350k':34,'over 500k':13},
+  'Sprzęt': {'0-1k':20,'1-5k':62,'5-10k':42,'10-20k':21,'20-30k':20,'30-50k':30,'50-80k':62,'80-100k':56,'200-250k':25},
+  'Wydarzenia': {'1-5k':12,'10-20k':62,'80-100k':40},
+  'Jedzenie, napoje i tytoń': {'0-1k':108,'1-5k':50,'5-10k':42,'10-20k':30,'20-30k':56,'30-50k':46,'50-80k':42,'80-100k':20,'100-150k':39,'150-200k':134,'350-500k':28},
+  'Meble': {'0-1k':30,'1-5k':66,'5-10k':35,'10-20k':22,'20-30k':15,'30-50k':35,'50-80k':84,'80-100k':232,'100-150k':643},
+  'Gadżety i reklama': {'1-5k':166,'5-10k':319,'20-30k':34,'30-50k':47,'80-100k':280,'100-150k':57},
+  'Gry i zabawki': {'0-1k':174,'1-5k':24,'5-10k':13,'10-20k':209,'20-30k':13,'30-50k':54,'50-80k':100,'80-100k':17,'150-200k':29},
+  'Zdrowie i uroda': {'0-1k':20,'1-5k':53,'5-10k':21,'10-20k':52,'20-30k':49,'30-50k':56,'50-80k':47,'80-100k':238,'100-150k':466,'150-200k':7,'200-250k':339,'250-350k':4,'350-500k':9,'over 500k':142},
+  'Zdrowie i dobrostan': {'0-1k':36,'1-5k':49,'5-10k':52,'10-20k':133,'20-30k':56,'30-50k':29,'50-80k':114,'80-100k':88,'100-150k':50,'150-200k':88,'200-250k':81,'250-350k':42},
+  'Dom i ogród': {'0-1k':18,'1-5k':36,'5-10k':43,'10-20k':83,'20-30k':93,'30-50k':71,'50-80k':43,'80-100k':60,'100-150k':169,'150-200k':111,'200-250k':74,'250-350k':62,'350-500k':20},
+  'Biżuteria': {'0-1k':56,'1-5k':25,'5-10k':43,'10-20k':29,'20-30k':114,'30-50k':50,'50-80k':18,'100-150k':161,'150-200k':6},
+  'Dzieci i niemowlęta': {'1-5k':55,'5-10k':24,'10-20k':38,'20-30k':74,'30-50k':49,'50-80k':38,'80-100k':6,'100-150k':94,'150-200k':78,'250-350k':9,'350-500k':89},
+  'Głoska bezdźwięczna': {'1-5k':22,'10-20k':28,'20-30k':171,'30-50k':189,'150-200k':110},
+  'Materiały biurowe': {'0-1k':32,'1-5k':18,'5-10k':79,'10-20k':19,'20-30k':12,'30-50k':89,'50-80k':347,'100-150k':23},
+  'Inny': {'0-1k':24,'1-5k':22,'5-10k':23,'10-20k':44,'20-30k':29,'30-50k':124,'50-80k':28,'100-150k':45,'150-200k':6},
+  'Artykuły religijne i dewocyjne': {'1-5k':28,'5-10k':26,'10-20k':34,'30-50k':56},
+  'Sprzęt sportowy': {'0-1k':20,'1-5k':143,'5-10k':42,'10-20k':50,'20-30k':61,'30-50k':160,'50-80k':10},
+  'Akcesoria podróżne': {'10-20k':14,'20-30k':77,'30-50k':44},
+  'Pojazdy i części': {'0-1k':110,'1-5k':40,'5-10k':52,'10-20k':210,'20-30k':132,'30-50k':254,'50-80k':249,'100-150k':25,'over 500k':12},
+};
+
+function licMaxToBand(licMax) {
+  if (licMax <= 1000)   return '0-1k';
+  if (licMax <= 5000)   return '1-5k';
+  if (licMax <= 10000)  return '5-10k';
+  if (licMax <= 20000)  return '10-20k';
+  if (licMax <= 30000)  return '20-30k';
+  if (licMax <= 50000)  return '30-50k';
+  if (licMax <= 80000)  return '50-80k';
+  if (licMax <= 100000) return '80-100k';
+  if (licMax <= 150000) return '100-150k';
+  if (licMax <= 200000) return '150-200k';
+  if (licMax <= 250000) return '200-250k';
+  if (licMax <= 350000) return '250-350k';
+  if (licMax <= 500000) return '350-500k';
+  return 'over 500k';
+}
 
 const SMS_TIERS = [
   [1,1000,0.15],[1001,5000,0.14],[5001,10000,0.12],
@@ -1176,6 +1228,15 @@ function recalc() {
     const roi = total > 0 ? Math.round((revenue / total) * 100) : 0;
     document.getElementById('statRevenue').textContent = fmt(revenue);
     document.getElementById('statRoi').textContent = roi.toLocaleString('pl-PL') + '%';
+
+    // Time to ROI
+    const band = licMaxToBand(licMax);
+    const industryTtr = TTR_DATA[industry];
+    const ttrDays = (industryTtr && industryTtr[band] != null)
+      ? industryTtr[band]
+      : 42; // overall median fallback
+    document.getElementById('statTtr').textContent = ttrDays + ' dni';
+
     document.getElementById('statsPretitle').textContent =
       `Branża: ${industry} · Baza: ${licLabel} kontaktów`;
     statsSection.classList.add('visible');
