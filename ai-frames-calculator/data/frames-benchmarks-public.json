@@ -1,0 +1,32 @@
+{
+  "generated_at": "2026-04-24T00:00:00.000Z",
+  "product": "ai_recommendation_frames",
+  "onsite_type_id": 16,
+  "lookback_days": 30,
+  "cohorts": {
+    "global": {
+      "n": 28,
+      "visitors_window_days_avg": 11.4,
+      "orders_per_visitor": 0.00008,
+      "views_per_1000_visitors": 35.98,
+      "clicks_per_1000_views": 348.62,
+      "click_to_order_rate": 0.006376
+    },
+    "pl": {
+      "n": 22,
+      "visitors_window_days_avg": 11.7,
+      "orders_per_visitor": 0.0000762,
+      "views_per_1000_visitors": 37.48,
+      "clicks_per_1000_views": 388.73,
+      "click_to_order_rate": 0.005230
+    },
+    "br": {
+      "n": 6,
+      "visitors_window_days_avg": 9.5,
+      "orders_per_visitor": 0.0000973,
+      "views_per_1000_visitors": 26.02,
+      "clicks_per_1000_views": 126.17,
+      "click_to_order_rate": 0.029630
+    }
+  }
+}

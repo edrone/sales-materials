@@ -1,0 +1,334 @@
+<!doctype html>
+<html lang="es-MX">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex, nofollow" />
+<title>Calculadora de Frames de Recomendación IA — edrone</title>
+<style>
+  :root {
+    --bg: #F5F0E1;
+    --text: #1E1E1E;
+    --muted: #6B6559;
+    --card: #FAF5E6;
+    --border: #E0DAC9;
+    --accent: #ECFF5A;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+  }
+  .topbar {
+    padding: 20px 32px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .topbar .brand { font-weight: 700; font-size: 18px; }
+  .topbar .brand span { color: var(--muted); font-weight: 400; margin-left: 8px; }
+  main {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 40px 32px 80px;
+  }
+  .hero {
+    background: #1E1E1E;
+    padding: 72px 32px;
+    text-align: center;
+  }
+  .hero-inner { max-width: 760px; margin: 0 auto; }
+  .hero .pill {
+    display: inline-block;
+    padding: 8px 20px;
+    border: 1.5px solid #5AE3E3;
+    border-radius: 999px;
+    color: #5AE3E3;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    margin-bottom: 28px;
+  }
+  .hero h1 {
+    color: #ECFF5A;
+    font-size: 48px;
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    margin: 0 0 20px;
+  }
+  .hero p {
+    color: #B0B0B0;
+    font-size: 16px;
+    line-height: 1.65;
+    margin: 0;
+  }
+  @media (max-width: 640px) {
+    .hero { padding: 48px 24px; }
+    .hero h1 { font-size: 32px; }
+  }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 20px;
+  }
+  label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  input[type="text"], input[type="number"] {
+    width: 100%;
+    padding: 12px 14px;
+    font-size: 16px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: #fff;
+    color: var(--text);
+    font-family: inherit;
+  }
+  input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  input[type="range"] {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 6px;
+    border-radius: 3px;
+    background: var(--border);
+    outline: none;
+    padding: 0;
+    margin: 0;
+    cursor: pointer;
+  }
+  input[type="range"]:focus { outline: none; }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--accent);
+    cursor: pointer;
+    border: 2px solid var(--text);
+    box-shadow: 0 0 0 4px rgba(236, 255, 90, 0.25);
+  }
+  input[type="range"]::-moz-range-thumb {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--accent);
+    cursor: pointer;
+    border: 2px solid var(--text);
+    box-shadow: 0 0 0 4px rgba(236, 255, 90, 0.25);
+  }
+  .slider-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 10px;
+  }
+  .slider-head .caption { font-size: 13px; color: var(--muted); }
+  .slider-value {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--text);
+    letter-spacing: -0.01em;
+  }
+  .slider-bounds {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 8px;
+  }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 640px) { .grid { grid-template-columns: 1fr; } }
+  .field { margin-bottom: 16px; }
+  button.cta {
+    display: inline-block;
+    background: var(--accent);
+    color: var(--text);
+    border: none;
+    padding: 14px 28px;
+    font-size: 16px;
+    font-weight: 700;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  button.cta:hover { filter: brightness(0.95); }
+  button.cta:disabled { opacity: 0.5; cursor: not-allowed; }
+  .results { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 24px; }
+  @media (max-width: 760px) { .results { grid-template-columns: 1fr; } }
+  .result {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+  }
+  .result .label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; }
+  .result .value { font-size: 32px; font-weight: 800; margin: 0; }
+  .result.highlight { background: var(--accent); border-color: var(--accent); }
+  .result.highlight .label { color: #1E1E1E; opacity: 0.7; }
+  .hidden { display: none; }
+  footer {
+    margin-top: 32px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .error { color: #B00020; font-size: 14px; margin-top: 12px; }
+  .shop-label { font-weight: 600; margin: 0 0 12px; font-size: 15px; }
+</style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">edrone <span>Calculadora de Frames de Recomendación IA</span></div>
+  </header>
+  <section class="hero">
+    <div class="hero-inner">
+      <span class="pill">edrone AI Recommendation Frames</span>
+      <h1>Más pedidos. El mismo tráfico.</h1>
+      <p>Tus visitantes no encuentran lo que buscan. Los Frames se lo mostrarán. La mayoría de los compradores nunca ven el 90% de tu catálogo. Los Frames de Recomendación IA ponen el producto correcto frente al visitante correcto — automáticamente.</p>
+    </div>
+  </section>
+  <main>
+
+    <div class="card">
+      <div class="field">
+        <label for="shopName">Nombre de la tienda</label>
+        <input id="shopName" type="text" placeholder="ej.: mitienda.com.mx" />
+      </div>
+      <div class="field">
+        <label for="visitors">Tráfico mensual (usuarios únicos)</label>
+        <div class="slider-head">
+          <span class="caption">visitas / mes</span>
+          <span class="slider-value" id="visitorsDisplay">100,000</span>
+        </div>
+        <input id="visitors" type="range" min="1000" max="2000000" step="1000" value="100000" />
+        <div class="slider-bounds"><span>1,000</span><span>2,000,000</span></div>
+      </div>
+      <div class="field">
+        <label for="aov">Ticket promedio (AOV) en MXN</label>
+        <input id="aov" type="number" min="0" step="0.01" placeholder="ej.: 800" />
+      </div>
+      <button id="calcBtn" class="cta" type="button" disabled>Cargando…</button>
+      <div id="errorMsg" class="error hidden"></div>
+    </div>
+
+    <div id="resultsBlock" class="hidden">
+      <p id="shopSummary" class="shop-label"></p>
+      <div class="results">
+        <div class="result">
+          <div class="label">Pedidos adicionales / mes</div>
+          <p id="outOrders" class="value">—</p>
+        </div>
+        <div class="result highlight">
+          <div class="label">Ingresos adicionales / mes</div>
+          <p id="outRevenue" class="value">—</p>
+        </div>
+        <div class="result">
+          <div class="label">Costo mensual de los frames</div>
+          <p id="outCost" class="value">—</p>
+        </div>
+      </div>
+    </div>
+
+    <footer id="footer">Cargando datos…</footer>
+  </main>
+<script>
+(function () {
+  const DATA_URL = "../data/frames-benchmarks-public.json";
+  const COMMISSION_RATE = 0.025;
+  const MIN_COST = 2000;
+  const LOCALE = "es-MX";
+  const CURRENCY = "MXN";
+
+  const state = { data: null };
+
+  function formatInt(n) {
+    return new Intl.NumberFormat(LOCALE, { maximumFractionDigits: 0 }).format(n);
+  }
+  function formatMoney(n) {
+    return new Intl.NumberFormat(LOCALE, { style: "currency", currency: CURRENCY, maximumFractionDigits: 0 }).format(Math.round(n));
+  }
+  function formatDate(iso) {
+    try {
+      return new Intl.DateTimeFormat(LOCALE, { year: "numeric", month: "long", day: "numeric" })
+        .format(new Date(iso));
+    } catch { return iso; }
+  }
+  function showError(msg) {
+    const el = document.getElementById("errorMsg");
+    el.textContent = msg;
+    el.classList.remove("hidden");
+  }
+  function clearError() {
+    document.getElementById("errorMsg").classList.add("hidden");
+  }
+
+  function calculate() {
+    clearError();
+    if (!state.data) { showError("Los datos del benchmark aún no se han cargado — actualiza la página."); return; }
+    const shop = document.getElementById("shopName").value.trim();
+    const visitors = Number(document.getElementById("visitors").value);
+    const aov = Number(document.getElementById("aov").value);
+    if (!Number.isFinite(visitors) || visitors <= 0) { showError("Ingresa un tráfico mensual mayor que cero."); return; }
+    if (!Number.isFinite(aov) || aov <= 0) { showError("Ingresa un ticket promedio mayor que cero."); return; }
+
+    const c = state.data.cohorts.global;
+    const orders = visitors * c.orders_per_visitor;
+    const revenue = orders * aov;
+    const cost = Math.max(revenue * COMMISSION_RATE, MIN_COST);
+
+    document.getElementById("outOrders").textContent = formatInt(orders);
+    document.getElementById("outRevenue").textContent = formatMoney(revenue);
+    document.getElementById("outCost").textContent = formatMoney(cost);
+    document.getElementById("shopSummary").textContent = shop
+      ? "Estimación para la tienda: " + shop
+      : "Estimación para tu tienda";
+    document.getElementById("resultsBlock").classList.remove("hidden");
+  }
+
+  const visitorsInput = document.getElementById("visitors");
+  const visitorsDisplay = document.getElementById("visitorsDisplay");
+  function updateVisitorsDisplay() {
+    visitorsDisplay.textContent = formatInt(Number(visitorsInput.value));
+  }
+  visitorsInput.addEventListener("input", updateVisitorsDisplay);
+  updateVisitorsDisplay();
+
+  document.getElementById("calcBtn").addEventListener("click", calculate);
+  document.querySelectorAll("input").forEach((i) => {
+    i.addEventListener("keydown", (e) => { if (e.key === "Enter") calculate(); });
+  });
+
+  fetch(DATA_URL, { cache: "no-store" })
+    .then((r) => r.json())
+    .then((data) => {
+      state.data = data;
+      const btn = document.getElementById("calcBtn");
+      btn.disabled = false;
+      btn.textContent = "Calcular";
+      document.getElementById("footer").textContent =
+        "Basado en N=" + data.cohorts.global.n + " clientes activos de edrone. Datos del " + formatDate(data.generated_at) + ".";
+    })
+    .catch((err) => {
+      console.error(err);
+      document.getElementById("footer").textContent = "No se pudieron cargar los datos del benchmark.";
+    });
+})();
+</script>
+</body>
+</html>
