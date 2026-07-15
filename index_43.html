@@ -1,0 +1,2510 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>edrone — Kalkulator Oferty</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --accent: #ECFF5A;
+      --accent-dim: rgba(236,255,90,.45);
+      --text: #1A1A1A;
+      --muted: #6E6E66;
+      --border: #E7E7D4;
+      --bg: #FBFBEC;
+      --card: #FFFFFF;
+      --card2: #FDFDF5;
+      --radius: 16px;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(160deg, #F7F7B0 0%, #FBFBEC 38%, #FFFFFF 100%);
+      background-attachment: fixed;
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── Top bar ── */
+    .topbar {
+      background: transparent;
+      padding: 16px 40px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .topbar-logo {
+      width: 32px; height: 32px;
+      background: var(--accent);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .topbar-logo svg { width: 18px; height: 18px; fill: #0F0F0F; }
+    .topbar h1 { font-size: 15px; font-weight: 700; color: var(--text); }
+    .topbar span { font-size: 13px; color: var(--muted); margin-left: 4px; }
+
+    /* ── Layout ── */
+    .layout {
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      gap: 32px;
+      max-width: 1040px;
+      margin: 0 auto;
+      padding: 40px 24px 80px;
+      align-items: start;
+    }
+
+    .modules { display: flex; flex-direction: column; gap: 16px; }
+
+    /* ── Module card ── */
+    .mcard {
+      background: var(--card);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+    .mcard-head {
+      padding: 22px 28px 18px;
+      border-bottom: 1px solid var(--border);
+    }
+    .mcard-head-row {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .mcard-title { font-size: 18px; font-weight: 700; margin-bottom: 4px; color: var(--text); }
+    .mcard-desc { font-size: 13px; color: var(--muted); line-height: 1.5; }
+
+    .badge-included {
+      background: var(--accent);
+      color: #0F0F0F;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 20px;
+      white-space: nowrap;
+      letter-spacing: .2px;
+    }
+    .badge-optional {
+      background: var(--accent-dim);
+      color: #1A1A1A;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 20px;
+      white-space: nowrap;
+      letter-spacing: .2px;
+    }
+
+    .mcard-body { padding: 22px 28px 24px; }
+
+    /* zwijane moduły dodatkowe */
+    .mcard.collapsible .mcard-head { cursor: pointer; user-select: none; }
+    .mcard.collapsible .mcard-head-row { align-items: center; }
+    .mcard-head-right { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+    .mcard-chevron { display: inline-flex; align-items: center; justify-content: center; color: var(--muted); transition: transform .18s; }
+    .mcard.collapsible:not(.collapsed) .mcard-chevron { transform: rotate(180deg); }
+    .mcard.collapsed .mcard-head { border-bottom: none; }
+    .mcard.collapsed .mcard-title { margin-bottom: 0; }
+    .mcard.collapsed .mcard-desc,
+    .mcard.collapsed .mcard-body,
+    .mcard.collapsed .toggle-row,
+    .mcard.collapsed .badge-optional { display: none; }
+
+    /* slider row */
+    .slider-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 10px;
+    }
+    .slider-range-label {
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .slider-range-label strong {
+      color: var(--text);
+      font-weight: 600;
+    }
+    .slider-price {
+      font-size: 30px;
+      font-weight: 800;
+      color: #1A1A1A;
+      letter-spacing: -.5px;
+    }
+    .slider-price-sub {
+      font-size: 12px;
+      color: var(--muted);
+      text-align: right;
+      margin-top: -2px;
+    }
+
+    /* range input */
+    input[type=range] {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 6px;
+      border-radius: 3px;
+      background: #E7E7D4;
+      outline: none;
+      cursor: pointer;
+      margin-top: 4px;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 0 3px #FFFFFF, 0 0 0 5px rgba(236,255,90,.3);
+      cursor: pointer;
+      transition: box-shadow .15s;
+    }
+    input[type=range]::-webkit-slider-thumb:hover {
+      box-shadow: 0 0 0 3px #FFFFFF, 0 0 0 7px rgba(236,255,90,.45);
+    }
+    input[type=range]::-moz-range-thumb {
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      background: var(--accent);
+      border: 3px solid #FFFFFF;
+      cursor: pointer;
+    }
+
+    .slider-track-wrap { position: relative; }
+    .slider-fill {
+      position: absolute;
+      top: 50%; left: 0;
+      height: 6px;
+      border-radius: 3px;
+      background: var(--accent);
+      pointer-events: none;
+      transform: translateY(-50%);
+    }
+    .slider-fill.black { background: #1A1A1A; }
+    input[type=range].black::-webkit-slider-thumb { background: #1A1A1A; box-shadow: 0 0 0 3px #FFFFFF, 0 0 0 5px rgba(26,26,26,.22); }
+    input[type=range].black::-webkit-slider-thumb:hover { box-shadow: 0 0 0 3px #FFFFFF, 0 0 0 7px rgba(26,26,26,.32); }
+    input[type=range].black::-moz-range-thumb { background: #1A1A1A; }
+
+    .slider-limits {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 6px;
+    }
+
+    /* toggle row */
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 28px;
+      border-top: 1px solid var(--border);
+      background: #FAFAE8;
+    }
+    .toggle-row label { font-size: 13px; color: var(--muted); cursor: pointer; }
+    .toggle-switch {
+      position: relative; width: 44px; height: 24px; cursor: pointer;
+    }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .toggle-track {
+      position: absolute; inset: 0;
+      background: #E0E0CE;
+      border-radius: 12px;
+      transition: background .2s;
+    }
+    .toggle-thumb {
+      position: absolute;
+      left: 3px; top: 3px;
+      width: 18px; height: 18px;
+      background: #FFFFFF;
+      border-radius: 50%;
+      transition: transform .2s, background .2s;
+      box-shadow: 0 1px 3px rgba(0,0,0,.18);
+    }
+    .toggle-switch input:checked ~ .toggle-track { background: var(--accent-dim); }
+    .toggle-switch input:checked ~ .toggle-thumb { transform: translateX(20px); background: var(--accent); }
+
+    .mcard-body.disabled { opacity: .35; pointer-events: none; }
+
+    /* ── Sticky summary ── */
+    .summary-wrap {
+      position: sticky;
+      top: 24px;
+    }
+    .summary {
+      background: var(--card);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+    .summary-head {
+      padding: 18px 22px 14px;
+      border-bottom: 1px solid var(--border);
+    }
+    .summary-total-value {
+      font-size: 32px;
+      font-weight: 800;
+      color: #1A1A1A;
+      letter-spacing: -.5px;
+    }
+    .summary-total-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .summary-total-sub span {
+      background: #F0F0DC;
+      font-size: 11px;
+      padding: 1px 6px;
+      border-radius: 4px;
+      margin-left: 4px;
+      color: var(--muted);
+    }
+
+    .summary-rows { padding: 14px 22px; display: flex; flex-direction: column; gap: 12px; }
+    .srow {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 14px;
+    }
+    .srow-label { color: var(--text); }
+    .srow-sub { font-size: 11px; color: var(--muted); margin-top: 1px; }
+    .srow-value { font-weight: 600; text-align: right; color: var(--text); }
+    .srow-value.off { color: var(--muted); font-size: 12px; font-weight: 400; }
+
+    .summary-divider { height: 1px; background: var(--border); margin: 0 22px; }
+
+    .summary-footer { padding: 16px 22px 20px; }
+    .summary-footer .total-row {
+      display: flex; justify-content: space-between; align-items: baseline;
+      margin-bottom: 4px;
+    }
+    .summary-footer .total-row .big { font-size: 26px; font-weight: 800; color: #1A1A1A; }
+    .summary-footer .vat-note { font-size: 11px; color: var(--muted); }
+
+    .cta-btn {
+      margin-top: 14px;
+      width: 100%;
+      padding: 13px;
+      background: #111111;
+      color: #FFFFFF;
+      font-size: 14px;
+      font-weight: 700;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-family: inherit;
+      letter-spacing: .2px;
+      transition: opacity .15s;
+    }
+    .cta-btn:hover { opacity: .85; }
+    .cta-btn.copied { background: #4ADE80; }
+
+    /* discount row */
+    .discount-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 16px;
+      padding-top: 14px;
+      border-top: 1px solid var(--border);
+    }
+    .sms-derived { margin-top: 12px; font-size: 13px; color: var(--muted); }
+    .sms-derived strong { color: var(--text); font-size: 15px; }
+    .sms-newsletter-row { margin-top: 12px; }
+    .sms-check { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
+    .sms-check input { width: 16px; height: 16px; accent-color: #1A1A1A; cursor: pointer; }
+    .sms-package-btn { margin-top: 14px; display: inline-flex; align-items: center; gap: 8px; padding: 9px 18px; border: 1.5px solid #1A1A1A; border-radius: 8px; background: #1A1A1A; color: #FFFFFF; font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer; transition: opacity .15s; }
+    .sms-package-btn:hover { opacity: .85; }
+    .packages { margin: 4px 0 20px; }
+    .packages-title { font-size: 15px; font-weight: 700; margin-bottom: 12px; }
+    .packages-sub { font-size: 12.5px; font-weight: 500; color: var(--muted); }
+    .packages-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .pkg-card { position: relative; background: #FFFFFF; border: 1px solid var(--border); border-radius: 14px; padding: 18px; display: flex; flex-direction: column; }
+    .pkg-card.featured {
+      border: 2px solid #1A1A1A;
+      background: linear-gradient(155deg, #FDFDF2 0%, #EEF4B6 100%);
+      box-shadow: 0 10px 34px rgba(176,176,40,.28);
+    }
+    .edrone-mark { display: inline-flex; align-items: center; gap: 9px; margin: 0 0 14px; }
+    .emk-bars { display: flex; flex-direction: column; gap: 3px; width: 30px; }
+    .emk-bar { height: 4px; border-radius: 2px; background: #C2C2B0; transform-origin: left center; transition: width .6s cubic-bezier(.22,1,.36,1), transform .6s cubic-bezier(.22,1,.36,1), background .45s ease; }
+    .emk-bar:nth-child(1) { width: 60%; transform: translateX(6px); }
+    .emk-bar:nth-child(2) { width: 100%; transform: translateX(-4px); }
+    .emk-bar:nth-child(3) { width: 42%; transform: translateX(11px); }
+    .edrone-mark.aligned .emk-bar { width: 100%; transform: translateX(0); background: #1A1A1A; }
+    .emk-word { font-weight: 800; font-style: italic; font-size: 16px; letter-spacing: -.4px; color: #C2C2B0; transition: color .45s ease; }
+    .edrone-mark.aligned .emk-word { color: #1A1A1A; }
+    .pkg-badge { position: absolute; top: -10px; left: 18px; background: var(--accent); color: #1A1A1A; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; }
+    .pkg-name { font-size: 16px; font-weight: 700; }
+    .pkg-desc { font-size: 12px; color: var(--muted); margin: 4px 0 12px; min-height: 30px; }
+    .pkg-price { font-size: 25px; font-weight: 800; line-height: 1.1; }
+    .pkg-price-sub { font-size: 11px; color: var(--muted); margin-bottom: 12px; }
+    .pkg-list { list-style: none; padding: 0; margin: 0 0 16px; font-size: 12.5px; color: var(--text); display: flex; flex-direction: column; gap: 6px; }
+    .pkg-list li { padding-left: 17px; position: relative; }
+    .pkg-list li::before { content: '✓'; position: absolute; left: 0; color: #4A8A2A; font-weight: 700; }
+    .pkg-btn { margin-top: auto; padding: 10px; border: 1.5px solid #1A1A1A; border-radius: 8px; background: #FFFFFF; font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer; transition: background .15s, opacity .15s; }
+    .pkg-btn:hover { background: #F5F5E8; }
+    .pkg-btn.primary { background: #1A1A1A; color: #FFFFFF; }
+    .pkg-btn.primary:hover { opacity: .88; }
+    @media (max-width: 560px) { .packages-grid { grid-template-columns: 1fr; } }
+    .badge-wip { font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; background: #F0E6C8; color: #8A6D2F; white-space: nowrap; }
+    .wip-ico { vertical-align: -2px; margin-left: 5px; color: #B08D3A; }
+    .mcard-disabled { opacity: .72; }
+    .mcard-disabled .toggle-switch { cursor: not-allowed; }
+    .toggle-switch input:disabled ~ .toggle-track { opacity: .45; }
+    .toggle-switch input:disabled ~ .toggle-thumb { opacity: .55; }
+    .discount-row label {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 500;
+    }
+    .discount-input-wrap {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .discount-input-wrap input {
+      width: 64px;
+      padding: 5px 8px;
+      background: #FAFAE8;
+      border: 1.5px solid #D9D9C4;
+      border-radius: 6px;
+      color: var(--text);
+      font-size: 13px;
+      font-family: inherit;
+      text-align: right;
+      -moz-appearance: textfield;
+      transition: border-color .15s;
+    }
+    .discount-input-wrap input::-webkit-outer-spin-button,
+    .discount-input-wrap input::-webkit-inner-spin-button { -webkit-appearance: none; }
+    .discount-input-wrap input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+    .discount-input-wrap span {
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .manual-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 14px;
+    }
+    .manual-row label { font-size: 12px; color: var(--muted); font-weight: 500; }
+    .manual-input-wrap { display: flex; align-items: center; gap: 6px; }
+    .manual-input-wrap input {
+      width: 92px;
+      padding: 5px 8px;
+      background: #FAFAE8;
+      border: 1.5px solid #D9D9C4;
+      border-radius: 6px;
+      color: var(--text);
+      font-size: 13px;
+      font-family: inherit;
+      text-align: right;
+      -moz-appearance: textfield;
+      transition: border-color .15s;
+    }
+    .manual-input-wrap input::-webkit-outer-spin-button,
+    .manual-input-wrap input::-webkit-inner-spin-button { -webkit-appearance: none; }
+    .manual-input-wrap input:focus { outline: none; border-color: var(--accent); }
+    .manual-input-wrap span { font-size: 13px; color: var(--muted); }
+    .srow-original {
+      font-size: 11px;
+      color: var(--muted);
+      text-decoration: line-through;
+      margin-right: 6px;
+    }
+
+    /* industry selector */
+    .industry-bar {
+      background: transparent;
+      padding: 16px 40px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .industry-bar label {
+      font-size: 13px;
+      font-weight: 600;
+      white-space: nowrap;
+      color: var(--muted);
+    }
+    .industry-tiles {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .ind-tile {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 7px;
+      width: 104px;
+      min-height: 84px;
+      padding: 12px 6px;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      background: #FFFFFF;
+      cursor: pointer;
+      transition: background .12s, border-color .12s, transform .12s;
+      text-align: center;
+      font-family: inherit;
+      --ic-main: #1A1A1A;
+      --ic-accent: #ECFF5A;
+    }
+    .ind-tile:hover { border-color: #C8C8B0; background: #FCFCEF; }
+    .ind-tile:active { transform: scale(.97); }
+    .ind-tile.active { background: var(--accent); border-color: var(--accent); --ic-accent: #FFFFFF; }
+    .ind-tile .ic { width: 26px; height: 26px; line-height: 0; }
+    .ind-tile .name { font-size: 10.5px; line-height: 1.25; color: var(--text); }
+    .ind-tile.active .name { font-weight: 700; }
+    .industry-selected { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; }
+    .ind-selected-name { font-size: 16px; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 9px; --ic-main: #1A1A1A; --ic-accent: #ECFF5A; }
+    .ind-sel-ic { line-height: 0; display: inline-flex; }
+    .ind-change {
+      background: none; border: none; padding: 0; cursor: pointer;
+      font-family: inherit; font-size: 13px; color: var(--muted);
+      text-decoration: underline; text-underline-offset: 3px;
+    }
+    .ind-change:hover { color: var(--text); }
+
+    /* ── Stats section ── */
+    .stats-section {
+      background: transparent;
+      padding: 56px 24px 64px;
+      display: none;
+    }
+    .stats-section.visible { display: block; }
+    .stats-inner {
+      max-width: 1040px;
+      margin: 0 auto;
+    }
+    .stats-pretitle {
+      font-size: 13px;
+      color: #888;
+      margin-bottom: 36px;
+      letter-spacing: .3px;
+    }
+    .stats-grid {
+      display: flex;
+      align-items: center;
+      gap: 0;
+    }
+    .stat-block { flex: 1; padding: 0 8px; }
+    .stat-divider {
+      width: 1px;
+      height: 100px;
+      background: #E0E0CE;
+      flex-shrink: 0;
+      margin: 0 40px;
+    }
+    .stat-value {
+      font-size: 64px;
+      font-weight: 900;
+      color: #1A1A1A;
+      letter-spacing: -2px;
+      line-height: 1;
+      margin-bottom: 16px;
+    }
+    .stat-label {
+      font-size: 15px;
+      font-weight: 600;
+      color: #2A2A2A;
+      margin-bottom: 6px;
+    }
+    .stat-desc {
+      font-size: 13px;
+      color: #6B7280;
+      line-height: 1.5;
+      max-width: 320px;
+    }
+    .stats-note {
+      margin-top: 40px;
+      font-size: 12px;
+      color: #4B5563;
+    }
+
+    .aov-compare { margin-top: 52px; }
+    .aov-title { font-size: 20px; font-weight: 700; color: var(--text); letter-spacing: -.3px; margin-bottom: 18px; }
+    .aov-row { display: flex; gap: 16px; flex-wrap: wrap; }
+    .aov-cell { flex: 1; min-width: 150px; background: #FFFFFF; border: 1px solid var(--border); border-radius: 12px; padding: 20px 22px; }
+    .aov-val { font-size: 28px; font-weight: 800; color: var(--text); letter-spacing: -.5px; }
+    .aov-lab { font-size: 13px; color: var(--muted); margin-top: 6px; }
+    .aov-cell.diff.up { background: var(--accent); border-color: var(--accent); }
+    .aov-cell.diff.up .aov-lab { color: #1A1A1A; }
+    .aov-cell.diff.down { background: #FBE9E9; border-color: #F2C9C9; }
+    .aov-cell.diff.down .aov-val { color: #B42318; }
+    .status-section { margin-top: 52px; }
+    .split-bar { display: flex; height: 32px; border-radius: 8px; overflow: hidden; border: 1px solid var(--border); }
+    .split-seg { display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; min-width: 0; transition: width .3s; white-space: nowrap; }
+    .split-seg.sub { background: var(--accent); color: #1A1A1A; }
+    .split-seg.unk { background: #2A2A28; color: #FFFFFF; }
+    .split-legend { display: flex; gap: 22px; margin-top: 12px; font-size: 13px; color: var(--muted); }
+    .split-leg { display: flex; align-items: center; gap: 8px; }
+    .split-leg .sw { width: 11px; height: 11px; border-radius: 2px; display: inline-block; }
+    .split-leg .sw.sub { background: var(--accent); }
+    .split-leg .sw.unk { background: #2A2A28; }
+    .split-leg b { color: var(--text); }
+    .scen-section { margin-top: 52px; }
+    .scen-list { display: flex; flex-direction: column; gap: 11px; }
+    .pie-section { margin-top: 52px; }
+    .pie-wrap { display: flex; align-items: center; gap: 40px; flex-wrap: wrap; }
+    .pie-legend { display: flex; flex-direction: column; gap: 12px; min-width: 300px; }
+    .pie-leg-row { display: flex; align-items: center; gap: 12px; font-size: 14px; color: var(--text); }
+    .pie-leg-sw { width: 14px; height: 14px; border-radius: 3px; flex-shrink: 0; }
+    .pie-leg-name { flex: 1; }
+    .pie-leg-amt { font-weight: 700; white-space: nowrap; }
+    .pie-leg-pct { font-weight: 700; color: var(--muted); min-width: 54px; text-align: right; white-space: nowrap; }
+    .pie-sub { font-size: 12.5px; color: var(--muted); margin: 2px 0 16px; }
+    /* TTR hover table */
+    .stat-block.ttr { position: relative; }
+    .ttr-trigger { cursor: help; text-decoration: underline dotted; text-underline-offset: 3px; }
+    .ttr-pop {
+      display: none;
+      position: absolute;
+      top: calc(100% + 10px);
+      right: 0;
+      z-index: 60;
+      width: 560px;
+      max-width: 88vw;
+      max-height: 72vh;
+      overflow: auto;
+      background: #FFFFFF;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      box-shadow: 0 12px 40px rgba(0,0,0,.18);
+      padding: 16px 18px;
+    }
+    .stat-block.ttr:hover .ttr-pop { display: block; }
+    .ttr-pop-title { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 12px; }
+    .ttr-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .ttr-table th { text-align: right; font-weight: 600; color: var(--muted); padding: 6px 6px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+    .ttr-table th:first-child { text-align: left; }
+    .ttr-table td { padding: 0; text-align: right; }
+    .ttr-table td.ttr-name { text-align: left; padding: 0 8px; color: var(--text); white-space: nowrap; font-weight: 500; }
+    .ttr-cell { display: block; padding: 5px 6px; border-radius: 4px; margin: 1px; font-variant-numeric: tabular-nums; }
+    .ttr-table tr.cur td.ttr-name { font-weight: 800; }
+    .ttr-table tr.cur { outline: 2px solid #1A1A1A; outline-offset: -2px; }
+    /* revenue metric boxes */
+    .rev-metric { display: flex; align-items: baseline; gap: 14px; background: #FFFFFF; border: 1px solid var(--border); border-radius: 12px; padding: 16px 20px; }
+    .rev-metric-val { font-size: 24px; font-weight: 800; color: var(--text); letter-spacing: -.5px; }
+    .rev-metric-lab { font-size: 13px; color: var(--muted); }
+    /* AI meeting summary */
+    .ai-summary { max-width: 1040px; margin: 0 auto; padding: 8px 24px 24px; }
+    .ai-summary-inner { background: #FFFFFF; border: 1px solid var(--border); border-radius: 16px; padding: 28px 30px; }
+    .ai-summary-desc { font-size: 13px; color: var(--muted); line-height: 1.55; margin: 6px 0 18px; max-width: 700px; }
+    .ai-summary-controls { display: flex; align-items: center; gap: 14px; margin-bottom: 12px; flex-wrap: wrap; }
+    .ai-file-btn { display: inline-flex; align-items: center; gap: 8px; padding: 9px 16px; border: 1.5px solid #D9D9C4; border-radius: 8px; background: #FAFAE8; font-size: 13px; font-weight: 600; cursor: pointer; transition: border-color .15s; }
+    .ai-file-btn:hover { border-color: #C8C8B0; }
+    .ai-or { font-size: 13px; color: var(--muted); }
+    .ai-textarea { width: 100%; min-height: 120px; resize: vertical; padding: 12px 14px; border: 1.5px solid var(--border); border-radius: 10px; font-family: inherit; font-size: 13px; line-height: 1.5; box-sizing: border-box; background: #FFFFFF; color: var(--text); }
+    .ai-textarea:focus { outline: none; border-color: var(--accent); }
+    .ai-gen-btn { margin-top: 14px; display: inline-flex; align-items: center; gap: 8px; padding: 11px 28px; border: none; border-radius: 10px; background: #1A1A1A; color: #FFFFFF; font-family: inherit; font-size: 14px; font-weight: 700; cursor: pointer; transition: background .15s; }
+    .ai-gen-btn:hover { background: #000; }
+    .ai-gen-btn:disabled { opacity: .6; cursor: default; }
+    .ai-output { width: 100%; min-height: 220px; resize: vertical; margin-top: 18px; padding: 16px 18px; border: 1.5px solid var(--border); border-radius: 10px; font-family: inherit; font-size: 13px; line-height: 1.6; box-sizing: border-box; background: #FBFBEC; color: var(--text); }
+    .ai-output:focus { outline: none; border-color: var(--accent); }
+    .ai-copy-btn { margin-top: 10px; padding: 8px 18px; border: 1.5px solid #1A1A1A; border-radius: 8px; background: #FFFFFF; font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer; transition: background .15s, color .15s; }
+    .ai-copy-btn:hover { background: #1A1A1A; color: #FFFFFF; }
+    .ai-summary-note { font-size: 11.5px; color: #9A9A8C; margin-top: 14px; }
+    .scen-row { display: flex; align-items: center; gap: 14px; }
+    .scen-name { width: 190px; flex-shrink: 0; font-size: 13px; color: var(--text); }
+    .scen-bar { flex: 1; height: 14px; background: #F0F0DC; border-radius: 7px; overflow: hidden; }
+    .scen-fill { display: block; height: 100%; background: var(--accent); border-radius: 7px; transition: width .3s; }
+    .scen-pct { width: 56px; text-align: right; font-size: 13px; font-weight: 700; color: var(--text); }
+    .rev-chart { margin-top: 64px; }
+    .rev-chart-title { font-size: 20px; font-weight: 700; color: #1A1A1A; letter-spacing: -.3px; }
+    .rev-chart-sub { font-size: 13px; color: #888; margin-top: 6px; margin-bottom: 14px; letter-spacing: .3px; }
+    .lic-chart-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; flex-wrap: wrap; }
+    .lic-diff { background: var(--accent); border-radius: 12px; padding: 12px 18px; text-align: right; flex-shrink: 0; }
+    .lic-diff-val { font-size: 22px; font-weight: 800; color: #1A1A1A; letter-spacing: -.5px; line-height: 1.1; }
+    .lic-diff-lab { font-size: 12px; color: #1A1A1A; opacity: .65; margin-top: 3px; }
+    .rev-legend { display: flex; flex-wrap: wrap; gap: 22px; margin-bottom: 22px; font-size: 12px; color: #9CA3AF; }
+    .rev-leg-item { display: flex; align-items: center; gap: 8px; }
+    .rev-leg-sw { width: 11px; height: 11px; border-radius: 2px; display: inline-block; }
+    .rev-leg-line { width: 18px; height: 0; border-top: 2.5px solid #1A1A1A; display: inline-block; }
+    .rev-axis-r { fill: #1A1A1A; font-size: 11px; font-weight: 700; }
+    .rev-chart svg { width: 100%; height: auto; display: block; overflow: visible; }
+    .rev-bar-g { cursor: default; }
+    .rev-bar-g:hover rect { opacity: .85; }
+    .seg-base { fill: #ECFF5A; }
+    .seg-sms { fill: #1A1A1A; }
+    .seg-wa { fill: #34B27B; }
+    .lic-bar { fill: #ECFF5A; }
+    .rev-bar-val { fill: #5A5A50; font-size: 11px; font-weight: 600; }
+    .rev-bar-month { fill: #6B7280; font-size: 12px; }
+    .rev-chart-foot { font-size: 12px; color: #4B5563; line-height: 1.5; margin-top: 20px; max-width: 640px; }
+
+    @media (max-width: 700px) {
+      .layout { grid-template-columns: 1fr; padding: 20px 16px 60px; }
+      .summary-wrap { position: static; }
+      .topbar { padding: 14px 20px; }
+      .stats-grid { flex-direction: column; gap: 40px; }
+      .stat-divider { display: none; }
+      .stat-value { font-size: 48px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-logo">
+    <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+  </div>
+  <h1>edrone</h1>
+  <span>Kalkulator oferty handlowej</span>
+</div>
+
+<div class="industry-bar">
+  <label>Branża klienta</label>
+  <div class="industry-tiles" id="industryTiles"></div>
+  <div class="industry-selected" id="industrySelected" style="display:none;">
+    <div class="ind-selected-name" id="indSelectedName"></div>
+    <button type="button" class="ind-change" id="indChange">Zmień branżę</button>
+  </div>
+  <input type="hidden" id="industrySelect" value="">
+</div>
+
+<div class="layout">
+
+  <!-- ── LEFT: modules ── -->
+  <div class="modules">
+
+    <!-- MODULE: Licencja -->
+    <div class="mcard">
+      <div class="mcard-head">
+        <div class="mcard-head-row">
+          <div>
+            <div class="mcard-title">Licencja</div>
+            <div class="mcard-desc">Dostęp do platformy edrone — email marketing, automatyzacje, scenariusze i analityka.</div>
+          </div>
+          <div class="badge-included">Wymagana</div>
+        </div>
+      </div>
+      <div class="mcard-body" id="licBody">
+        <div class="slider-meta">
+          <div>
+            <div class="slider-range-label">kontakty w bazie</div>
+            <div class="slider-range-label"><strong id="licRangeLabel">do 250</strong></div>
+          </div>
+          <div style="text-align:right">
+            <div class="slider-price" id="licPriceDisplay" title="Kliknij dwukrotnie, aby dodać rabat" style="cursor:pointer">100,00 zł</div>
+            <div class="slider-price-sub">/ miesiąc</div>
+          </div>
+        </div>
+        <div class="slider-track-wrap">
+          <div class="slider-fill" id="licFill"></div>
+          <input type="range" id="licSlider" min="0" max="0" value="0" step="1" />
+        </div>
+        <div class="slider-limits">
+          <span>250</span>
+          <span>1 200 000</span>
+        </div>
+        <div class="discount-row" id="discountRow" style="display:none;">
+          <label>Rabat</label>
+          <div class="discount-input-wrap">
+            <input type="number" id="licDiscount" min="0" max="100" placeholder="0" />
+            <span>%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── REKOMENDOWANE PAKIETY ── -->
+    <div class="packages" id="packagesSection" style="display:none;">
+      <div class="packages-title">Rekomendowane pakiety <span class="packages-sub" id="packagesSub"></span></div>
+      <div class="packages-grid">
+        <div class="pkg-card" id="pkgBasic">
+          <div class="pkg-name">Podstawowy</div>
+          <div class="pkg-desc">Sama licencja edrone dla Twojej bazy.</div>
+          <div class="pkg-price" id="pkgBasicPrice">—</div>
+          <div class="pkg-price-sub">/ miesiąc netto</div>
+          <ul class="pkg-list" id="pkgBasicList"></ul>
+          <button type="button" class="pkg-btn" id="pkgBasicBtn">Wybierz Podstawowy</button>
+        </div>
+        <div class="pkg-card featured" id="pkgFull">
+          <div class="pkg-badge">Rekomendowany</div>
+          <div class="pkg-name">Full</div>
+          <div class="pkg-desc">Licencja + moduły dobrane do liczby kontaktów.</div>
+          <div class="edrone-mark" id="edroneMark" aria-hidden="true">
+            <div class="emk-bars"><span class="emk-bar"></span><span class="emk-bar"></span><span class="emk-bar"></span></div>
+            <span class="emk-word">edrone</span>
+          </div>
+          <div class="pkg-price" id="pkgFullPrice">—</div>
+          <div class="pkg-price-sub">/ miesiąc netto</div>
+          <ul class="pkg-list" id="pkgFullList"></ul>
+          <button type="button" class="pkg-btn primary" id="pkgFullBtn">Wybierz Full</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODULE: SMS -->
+    <div class="mcard collapsible collapsed">
+      <div class="mcard-head">
+        <div class="mcard-head-row">
+          <div>
+            <div class="mcard-title">SMS</div>
+            <div class="mcard-desc">Kampanie i automatyzacje SMS. Cena za wiadomość zależy od wolumenu miesięcznego.</div>
+          </div>
+          <div class="mcard-head-right"><div class="badge-optional">Opcjonalny</div><span class="mcard-chevron"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></span></div>
+        </div>
+      </div>
+      <div class="mcard-body" id="smsBody">
+        <div class="slider-meta">
+          <div>
+            <div class="slider-range-label">liczba SMS miesięcznie</div>
+            <div class="slider-range-label"><strong id="smsRangeLabel">0</strong></div>
+          </div>
+          <div style="text-align:right">
+            <div class="slider-price" id="smsPriceDisplay">0,00 zł</div>
+            <div class="slider-price-sub">/ miesiąc</div>
+          </div>
+        </div>
+        <div class="slider-track-wrap">
+          <div class="slider-fill" id="smsFill"></div>
+          <input type="range" id="smsSlider" min="0" max="0" value="0" step="1" />
+        </div>
+        <div class="slider-limits">
+          <span>0</span>
+          <span>100 000</span>
+        </div>
+        <div class="manual-row">
+          <label for="smsUnits">lub wpisz ręcznie</label>
+          <div class="manual-input-wrap">
+            <input type="number" id="smsUnits" min="0" step="100" value="0" />
+            <span>SMS</span>
+          </div>
+        </div>
+        <div class="slider-meta" style="margin-top:20px">
+          <div>
+            <div class="slider-range-label">liczba kontaktów SMS w bazie</div>
+            <div class="slider-range-label"><strong id="smsBaseRangeLabel">0</strong></div>
+          </div>
+        </div>
+        <div class="slider-track-wrap">
+          <div class="slider-fill black" id="smsBaseFill"></div>
+          <input type="range" id="smsBaseSlider" class="black" min="0" max="0" value="0" step="1" />
+        </div>
+        <div class="slider-limits">
+          <span>0</span>
+          <span>50 000</span>
+        </div>
+        <div class="manual-row">
+          <label for="smsBaseUnits">lub wpisz ręcznie</label>
+          <div class="manual-input-wrap">
+            <input type="number" id="smsBaseUnits" min="0" step="100" value="0" />
+            <span>kontaktów</span>
+          </div>
+        </div>
+        <div class="sms-derived">Sugerowana liczba SMS wg zużycia podobnych klientów: <strong id="smsDerived">0</strong> / miesiąc<span id="smsRateNote"></span></div>
+        <div class="sms-newsletter-row">
+          <label class="sms-check">
+            <input type="checkbox" id="smsNewsletter" />
+            <span>SMS Newsletter</span>
+          </label>
+        </div>
+        <button type="button" class="sms-package-btn" id="smsPackageBtn">Sugerowana paczka</button>
+      </div>
+      <div class="toggle-row">
+        <label for="smsToggle">Włącz moduł SMS</label>
+        <label class="toggle-switch">
+          <input type="checkbox" id="smsToggle" checked />
+          <div class="toggle-track"></div>
+          <div class="toggle-thumb"></div>
+        </label>
+      </div>
+    </div>
+
+    <!-- MODULE: WhatsApp -->
+    <div class="mcard collapsible collapsed">
+      <div class="mcard-head">
+        <div class="mcard-head-row">
+          <div>
+            <div class="mcard-title">WhatsApp</div>
+            <div class="mcard-desc">Kampanie i automatyzacje WhatsApp Business. Cena za wiadomość zależy od wolumenu.</div>
+          </div>
+          <div class="mcard-head-right"><div class="badge-optional">Opcjonalny</div><span class="mcard-chevron"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></span></div>
+        </div>
+      </div>
+      <div class="mcard-body" id="waBody">
+        <div class="slider-meta">
+          <div>
+            <div class="slider-range-label">wiadomości / miesiąc</div>
+            <div class="slider-range-label"><strong id="waRangeLabel">1 000</strong></div>
+          </div>
+          <div style="text-align:right">
+            <div class="slider-price" id="waPriceDisplay">510,00 zł</div>
+            <div class="slider-price-sub">/ miesiąc</div>
+          </div>
+        </div>
+        <div class="slider-track-wrap">
+          <div class="slider-fill" id="waFill"></div>
+          <input type="range" id="waSlider" min="0" max="0" value="0" step="1" />
+        </div>
+        <div class="slider-limits">
+          <span>0</span>
+          <span>10 000</span>
+        </div>
+        <div class="manual-row">
+          <label for="waUnits">lub wpisz ręcznie</label>
+          <div class="manual-input-wrap">
+            <input type="number" id="waUnits" min="0" step="100" value="0" />
+            <span>wiad.</span>
+          </div>
+        </div>
+      </div>
+      <div class="toggle-row">
+        <label for="waToggle">Włącz moduł WhatsApp</label>
+        <label class="toggle-switch">
+          <input type="checkbox" id="waToggle" checked />
+          <div class="toggle-track"></div>
+          <div class="toggle-thumb"></div>
+        </label>
+      </div>
+    </div>
+
+    <!-- MODULE: edrone Reviews -->
+    <div class="mcard collapsible collapsed">
+      <div class="mcard-head">
+        <div class="mcard-head-row">
+          <div>
+            <div class="mcard-title">edrone Reviews</div>
+            <div class="mcard-desc">Zbieranie opinii po zakupie. Opłata kaskadowa (progi sumują się): do 150 → 49 zł, 151–500 → +149 zł, 501–1000 → +299 zł, powyżej 1000 → +0,29 zł za zamówienie.</div>
+          </div>
+          <div class="mcard-head-right"><div class="badge-optional">Opcjonalny</div><span class="mcard-chevron"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></span></div>
+        </div>
+      </div>
+      <div class="mcard-body" id="recBody">
+        <div class="slider-meta">
+          <div>
+            <div class="slider-range-label">liczba zamówień / miesiąc</div>
+            <div class="slider-range-label"><strong id="recRangeLabel">0</strong></div>
+          </div>
+          <div style="text-align:right">
+            <div class="slider-price" id="recPriceDisplay">0,00 zł</div>
+            <div class="slider-price-sub">/ miesiąc</div>
+          </div>
+        </div>
+        <div class="slider-track-wrap">
+          <div class="slider-fill" id="recFill"></div>
+          <input type="range" id="recSlider" min="0" max="0" value="0" step="1" />
+        </div>
+        <div class="slider-limits">
+          <span>0</span>
+          <span>20 000</span>
+        </div>
+        <div class="manual-row">
+          <label for="recUnits">lub wpisz ręcznie</label>
+          <div class="manual-input-wrap">
+            <input type="number" id="recUnits" min="0" step="50" value="0" />
+            <span>zamówień</span>
+          </div>
+        </div>
+      </div>
+      <div class="toggle-row">
+        <label for="recToggle">Włącz moduł Rekomendacji</label>
+        <label class="toggle-switch">
+          <input type="checkbox" id="recToggle" checked />
+          <div class="toggle-track"></div>
+          <div class="toggle-thumb"></div>
+        </label>
+      </div>
+    </div>
+
+    <!-- MODULE: edrone AI chat -->
+    <div class="mcard collapsible collapsed">
+      <div class="mcard-head">
+        <div class="mcard-head-row">
+          <div>
+            <div class="mcard-title">edrone AI chat</div>
+            <div class="mcard-desc">Cena za konwersację zależna od liczby konwersacji w miesiącu (od 2,50 zł do 1,50 zł).</div>
+          </div>
+          <div class="mcard-head-right"><div class="badge-optional">Opcjonalny</div><span class="mcard-chevron"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></span></div>
+        </div>
+      </div>
+      <div class="mcard-body" id="aiBody">
+        <div class="slider-meta">
+          <div>
+            <div class="slider-range-label">liczba konwersacji / miesiąc</div>
+            <div class="slider-range-label"><strong id="aiRangeLabel">0</strong></div>
+          </div>
+          <div style="text-align:right">
+            <div class="slider-price" id="aiPriceDisplay">0,00 zł</div>
+            <div class="slider-price-sub">/ miesiąc</div>
+          </div>
+        </div>
+        <div class="slider-track-wrap">
+          <div class="slider-fill" id="aiFill"></div>
+          <input type="range" id="aiSlider" min="0" max="0" value="0" step="1" />
+        </div>
+        <div class="slider-limits">
+          <span>0</span>
+          <span>50 000</span>
+        </div>
+        <div class="manual-row">
+          <label for="aiUnits">lub wpisz ręcznie</label>
+          <div class="manual-input-wrap">
+            <input type="number" id="aiUnits" min="0" step="50" value="0" />
+            <span>konw.</span>
+          </div>
+        </div>
+      </div>
+      <div class="toggle-row">
+        <label for="aiToggle">Włącz moduł edrone AI chat</label>
+        <label class="toggle-switch">
+          <input type="checkbox" id="aiToggle" checked />
+          <div class="toggle-track"></div>
+          <div class="toggle-thumb"></div>
+        </label>
+      </div>
+    </div>
+
+    <!-- MODULE: Ramki rekomendacji AI -->
+    <div class="mcard collapsible collapsed mcard-disabled">
+      <div class="mcard-head">
+        <div class="mcard-head-row">
+          <div>
+            <div class="mcard-title">Ramki rekomendacji AI <svg class="wip-ico" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-label="moduł w budowie"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></div>
+            <div class="mcard-desc">Moduł w budowie — wkrótce dostępny.</div>
+          </div>
+          <div class="mcard-head-right"><div class="badge-wip">Wkrótce</div><span class="mcard-chevron"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></span></div>
+        </div>
+      </div>
+      <div class="mcard-body" id="rfBody">
+        <div class="slider-meta">
+          <div>
+            <div class="slider-range-label">wyświetleń / miesiąc</div>
+            <div class="slider-range-label"><strong id="rfRangeLabel">0</strong></div>
+          </div>
+          <div style="text-align:right">
+            <div class="slider-price" id="rfPriceDisplay">0,00 zł</div>
+            <div class="slider-price-sub">/ miesiąc</div>
+          </div>
+        </div>
+        <div class="slider-track-wrap">
+          <div class="slider-fill" id="rfFill"></div>
+          <input type="range" id="rfSlider" min="0" max="0" value="0" step="1" disabled />
+        </div>
+        <div class="slider-limits">
+          <span>0</span>
+          <span>200 000</span>
+        </div>
+        <div class="manual-row">
+          <label for="rfUnits">lub wpisz ręcznie</label>
+          <div class="manual-input-wrap">
+            <input type="number" id="rfUnits" min="0" step="1000" value="0" disabled />
+            <span>wyśw.</span>
+          </div>
+        </div>
+      </div>
+      <div class="toggle-row">
+        <label for="rfToggle">Moduł w przygotowaniu — wkrótce</label>
+        <label class="toggle-switch">
+          <input type="checkbox" id="rfToggle" disabled />
+          <div class="toggle-track"></div>
+          <div class="toggle-thumb"></div>
+        </label>
+      </div>
+    </div>
+
+  </div><!-- /modules -->
+
+  <!-- ── RIGHT: summary ── -->
+  <div class="summary-wrap">
+    <div class="summary">
+      <div class="summary-head">
+        <div class="summary-total-value" id="summaryTotal">—</div>
+        <div class="summary-total-sub">miesięcznie <span>netto</span></div>
+      </div>
+
+      <div class="summary-rows">
+        <div class="srow">
+          <div>
+            <div class="srow-label">Licencja</div>
+            <div class="srow-sub" id="sumLicSub"></div>
+          </div>
+          <div class="srow-value" id="sumLic">—</div>
+        </div>
+        <div class="srow">
+          <div>
+            <div class="srow-label">SMS</div>
+            <div class="srow-sub" id="sumSmsSub"></div>
+          </div>
+          <div class="srow-value" id="sumSms">—</div>
+        </div>
+        <div class="srow">
+          <div>
+            <div class="srow-label">WhatsApp</div>
+            <div class="srow-sub" id="sumWaSub"></div>
+          </div>
+          <div class="srow-value" id="sumWa">—</div>
+        </div>
+        <div class="srow">
+          <div>
+            <div class="srow-label">edrone Reviews</div>
+            <div class="srow-sub" id="sumRecSub"></div>
+          </div>
+          <div class="srow-value" id="sumRec">—</div>
+        </div>
+        <div class="srow">
+          <div>
+            <div class="srow-label">edrone AI chat</div>
+            <div class="srow-sub" id="sumAiSub"></div>
+          </div>
+          <div class="srow-value" id="sumAi">—</div>
+        </div>
+        <div class="srow">
+          <div>
+            <div class="srow-label">Ramki rekomendacji AI</div>
+            <div class="srow-sub" id="sumRfSub"></div>
+          </div>
+          <div class="srow-value" id="sumRf">—</div>
+        </div>
+      </div>
+
+      <div class="summary-divider"></div>
+
+      <div class="summary-footer">
+        <div class="total-row">
+          <span style="font-size:14px;font-weight:600">Łączna kwota</span>
+          <span class="big" id="summaryTotalBig">—</span>
+        </div>
+        <div class="vat-note">Ceny netto, bez VAT (23%)</div>
+        <button class="cta-btn" id="copyBtn" onclick="copyQuote()">Skopiuj wycenę</button>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /layout -->
+
+<!-- ── STATS SECTION ── -->
+<div class="stats-section" id="statsSection">
+  <div class="stats-inner">
+    <div class="stats-pretitle" id="statsPretitle"></div>
+    <div class="stats-grid">
+      <div class="stat-block">
+        <div class="stat-value" id="statRevenue">—</div>
+        <div class="stat-label">Miesięczny obrót generowany przez edrone</div>
+        <div class="stat-desc">Szacunkowy obrót po 12 miesiącach współpracy dla bazy tej wielkości</div>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat-block">
+        <div class="stat-value" id="statRoi">—</div>
+        <div class="stat-label">ROI z edrone</div>
+        <div class="stat-desc">Średnie ROI po 12 miesiącach współpracy — stosunek obrotu generowanego przez edrone do miesięcznego kosztu licencji</div>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat-block ttr" id="ttrBlock">
+        <div class="stat-value" id="statTtr">—</div>
+        <div class="stat-label ttr-trigger">Time to ROI</div>
+        <div class="stat-desc">Mediana czasu (dni) do osiągnięcia ROI w tej branży i przedziale bazy</div>
+        <div class="ttr-pop" id="ttrPop">
+          <div class="ttr-pop-title">Time to ROI (dni) — wg branży i przedziału bazy</div>
+          <table class="ttr-table"><thead><tr><th>Branża</th><th>0–5k</th><th>5–10k</th><th>10–50k</th><th>50–100k</th><th>ponad 100k</th></tr></thead><tbody id="ttrTbody"></tbody></table>
+        </div>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat-block">
+        <div class="stat-value" id="statImpact">—</div>
+        <div class="stat-label">Impact rate</div>
+        <div class="stat-desc">Średni udział przychodu generowanego przez edrone (Impact Rate) w tej branży</div>
+      </div>
+    </div>
+    <div class="stats-note">Wartości szacunkowe, obliczone na podstawie średnich danych branżowych edrone.</div>
+
+    <div class="aov-compare" id="aovCompare">
+      <div class="aov-title">Średnia wartość zamówienia (AOV)</div>
+      <div class="aov-row">
+        <div class="aov-cell"><div class="aov-val" id="aovWithout">—</div><div class="aov-lab">bez edrone</div></div>
+        <div class="aov-cell"><div class="aov-val" id="aovWith">—</div><div class="aov-lab">z edrone</div></div>
+        <div class="aov-cell diff" id="aovDiffCell"><div class="aov-val" id="aovDiff">—</div><div class="aov-lab" id="aovDiffLab">różnica</div></div>
+      </div>
+    </div>
+
+    <div class="status-section" id="statusSection">
+      <div class="aov-title">Przychód wg statusu odbiorcy</div>
+      <div class="split-bar">
+        <div class="split-seg sub" id="splitSub"></div>
+        <div class="split-seg unk" id="splitUnk"></div>
+      </div>
+      <div class="split-legend">
+        <span class="split-leg"><span class="sw sub"></span>Subskrybenci&nbsp;<b id="splitSubPct"></b></span>
+        <span class="split-leg"><span class="sw unk"></span>Nieznani&nbsp;<b id="splitUnkPct"></b></span>
+      </div>
+      <div class="aov-row" style="margin-top:20px;">
+        <div class="aov-cell"><div class="aov-val" id="per1000Sub">—</div><div class="aov-lab">średni miesięczny przychód z 1000 subskrybentów</div></div>
+        <div class="aov-cell"><div class="aov-val" id="per1000Unk">—</div><div class="aov-lab">średni miesięczny przychód z 1000 nieznanych</div></div>
+      </div>
+    </div>
+
+    <div class="aov-row" style="margin-top:52px;">
+      <div class="aov-cell"><div class="aov-val">4 077 zł</div><div class="aov-lab">śr. przychód z 1000 wysłanych automatyzacji</div></div>
+      <div class="aov-cell"><div class="aov-val">700 zł</div><div class="aov-lab">śr. przychód z 1000 wysłanych newsletterów</div></div>
+    </div>
+
+    <div class="pie-section" id="pieSection">
+      <div class="aov-title">Udział kanałów w przychodzie</div>
+      <div class="pie-sub" id="pieSub"></div>
+      <div class="pie-wrap">
+        <svg id="pieSvg" viewBox="0 0 220 220" width="220" height="220" role="img" aria-label="Udział kanałów w przychodzie wybranej branży"></svg>
+        <div class="pie-legend" id="pieLegend"></div>
+      </div>
+    </div>
+
+    <div class="scen-section" id="scenSection">
+      <div class="aov-title">Najlepsze scenariusze w branży</div>
+      <div class="scen-list" id="scenList"></div>
+      <div class="rev-chart-foot">Udział poszczególnych scenariuszy w przychodzie generowanym przez edrone w tej branży.</div>
+    </div>
+
+    <div class="scen-section" id="scenSmsSection">
+      <div class="rev-metric" style="margin-bottom:18px;"><span class="rev-metric-val">5 100 zł</span><span class="rev-metric-lab">śr. przychód z 1000 wysłanych SMS</span></div>
+      <div class="aov-title">Najlepsze automatyzacje SMS</div>
+      <div class="scen-list" id="scenSmsList"></div>
+      <div class="rev-chart-foot">Top 3 automatyzacje SMS — udział w przychodzie SMS generowanym w tej branży (% z sumy wszystkich automatyzacji SMS branży).</div>
+    </div>
+
+    <div class="scen-section" id="scenWaSection">
+      <div class="rev-metric" style="margin-bottom:18px;"><span class="rev-metric-val">6 510 zł</span><span class="rev-metric-lab">śr. przychód z 1000 wysłanych WhatsApp</span></div>
+      <div class="aov-title">Najlepsze automatyzacje WhatsApp</div>
+      <div class="scen-list" id="scenWaList"></div>
+      <div class="rev-chart-foot">Top 3 automatyzacje WhatsApp — udział w przychodzie WhatsApp (% z sumy wszystkich automatyzacji; wartości wspólne dla wszystkich branż).</div>
+    </div>
+
+    <div class="rev-chart" id="revChart">
+      <div class="rev-chart-title">Przeciętny przychód podobnych klientów</div>
+      <div class="rev-chart-sub" id="revChartSub"></div>
+      <div class="rev-legend" id="revLegend"></div>
+      <svg id="revChartSvg" viewBox="0 0 1040 340" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Przeciętny miesięczny przychód klientów w wybranym przedziale wielkości bazy"></svg>
+      <div class="rev-chart-foot">Średni miesięczny przychód klientów edrone w tym przedziale wielkości bazy, w pierwszych 12 miesiącach współpracy. Wykres zmienia się wraz z liczbą kontaktów w bazie.</div>
+    </div>
+
+    <div class="rev-chart" id="licChart">
+      <div class="lic-chart-head">
+        <div>
+          <div class="rev-chart-title">Symulacja rachunku — koszt licencji przy wzroście bazy</div>
+          <div class="rev-chart-sub" id="licChartSub"></div>
+        </div>
+        <div class="lic-diff" id="licDiffBox">
+          <div class="lic-diff-val" id="licDiffVal">—</div>
+          <div class="lic-diff-lab">różnica 1. → 12. miesiąc</div>
+        </div>
+      </div>
+      <svg id="licChartSvg" viewBox="0 0 1040 340" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Prognoza miesięcznego kosztu licencji przy wzroście bazy kontaktów"></svg>
+      <div class="rev-chart-foot">Prognoza miesięcznego kosztu licencji netto przy założeniu, że baza kontaktów rośnie co miesiąc — w tempie zależnym od jej wielkości. Punkt startowy to baza wybrana w sekcji Licencja.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── IMPORT / PODSUMOWANIE AI ── -->
+<div class="ai-summary" id="aiSummary">
+  <div class="ai-summary-inner">
+    <div class="aov-title">Podsumowanie spotkania (AI)</div>
+    <p class="ai-summary-desc">Wgraj lub wklej transkrypcję rozmowy sprzedażowej. Na podstawie danych wybranej branży i ustawionej powyżej oferty przygotuję krótki, sprzedażowy e-mail podsumowujący — wybiorę parametry, o których mówił klient, i przełożę liczby na konkretne korzyści dla niego.</p>
+    <div class="ai-summary-controls">
+      <label class="ai-file-btn">
+        <input type="file" id="transcriptFile" accept=".txt,.md,.docx" hidden>
+        Wgraj plik (.txt / .docx)
+      </label>
+      <span class="ai-or">lub wklej poniżej</span>
+    </div>
+    <textarea id="transcriptInput" class="ai-textarea" placeholder="Wklej tu transkrypcję rozmowy…"></textarea>
+    <button class="ai-gen-btn" id="genSummaryBtn" type="button">Generuj e-mail</button>
+    <textarea id="summaryOutput" class="ai-output" spellcheck="false" style="display:none;"></textarea>
+    <button class="ai-copy-btn" id="copySummaryBtn" type="button" style="display:none;">Kopiuj e-mail</button>
+    <p class="ai-summary-note">Najpierw wybierz branżę i ustaw ofertę powyżej. E-mail to propozycja oparta o średnie branżowe edrone (nie gwarancja wyniku).</p>
+  </div>
+</div>
+
+<script>
+// ── Pricing data ──────────────────────────────────────────────────────────
+
+const INDUSTRY_EMOJI = {
+  'Zwierzęta i akcesoria dla zwierząt':'🐾','Sztuka i rozrywka':'🎨','Artykuły dla dorosłych':'🔞',
+  'Biznes i przemysł':'🏭','Ubrania i akcesoria':'👕','Elektronika':'💻','Sprzęt':'🛠️',
+  'Wydarzenia':'🎟️','Jedzenie, napoje i tytoń':'🍔','Meble':'🛋️','Gadżety i reklama':'📣',
+  'Gry i zabawki':'🧸','Zdrowie i uroda':'💄','Zdrowie i dobrostan':'🌿','Dom i ogród':'🏡',
+  'Biżuteria':'💎','Dzieci i niemowlęta':'🍼','Głoska bezdźwięczna':'📺','Materiały biurowe':'📎',
+  'Inny':'📦','Artykuły religijne i dewocyjne':'📿','Sprzęt sportowy':'⚽','Akcesoria podróżne':'🧳',
+  'Pojazdy i części':'🚗'
+};
+const INDUSTRY_ICONS = {"Zwierzęta i akcesoria dla zwierząt":"<circle cx=\"7\" cy=\"9.5\" r=\"2\" fill=\"var(--ic-main)\"/><circle cx=\"11\" cy=\"7\" r=\"2\" fill=\"var(--ic-main)\"/><circle cx=\"15.5\" cy=\"7.5\" r=\"2\" fill=\"var(--ic-main)\"/><circle cx=\"18\" cy=\"11\" r=\"2\" fill=\"var(--ic-main)\"/><path d=\"M12 11.4c2.4 0 4.2 1.7 4.2 3.9 0 2-1.7 2.8-4.2 4.2-2.5-1.4-4.2-2.2-4.2-4.2 0-2.2 1.8-3.9 4.2-3.9z\" fill=\"var(--ic-accent)\"/>","Sztuka i rozrywka":"<path d=\"M12 3.5a8.5 8.5 0 1 0 0 17c1 0 1.6-.8 1.6-1.6 0-.9-.7-1.3-.7-2 0-.8.7-1.4 1.5-1.4H16a4.5 4.5 0 0 0 4.5-4.5c0-4-3.8-7-8.5-7z\" fill=\"var(--ic-main)\"/><circle cx=\"7.5\" cy=\"11\" r=\"1.1\" fill=\"var(--ic-accent)\"/><circle cx=\"11\" cy=\"7.8\" r=\"1.1\" fill=\"var(--ic-accent)\"/><circle cx=\"15.5\" cy=\"8.5\" r=\"1.1\" fill=\"var(--ic-accent)\"/>","Artykuły dla dorosłych":"<path d=\"M12 3.2s4.6 3.8 4.6 8.3a4.6 4.6 0 0 1-9.2 0c0-1.9.9-3.3 1.8-4.2.4 1.3 1.4 1.8 1.4 1.8s.3-3.5 1.4-5.7z\" fill=\"var(--ic-main)\"/><path d=\"M12 12.8c1.4 0 2.4 1 2.4 2.4 0 1.3-1 2.4-2.4 2.4s-2.4-1.1-2.4-2.4c0-1 .5-1.6 1-2 .2.5.6.7.6.7s.1-.7.8-1.1z\" fill=\"var(--ic-accent)\"/>","Biznes i przemysł":"<rect x=\"3.5\" y=\"8\" width=\"17\" height=\"10.5\" rx=\"2\" fill=\"var(--ic-main)\"/><path d=\"M8.8 8V6.4A2.4 2.4 0 0 1 11.2 4h1.6A2.4 2.4 0 0 1 15.2 6.4V8h-1.8V6.6a.8.8 0 0 0-.8-.8h-1.2a.8.8 0 0 0-.8.8V8z\" fill=\"var(--ic-main)\"/><rect x=\"3.5\" y=\"11.6\" width=\"17\" height=\"2.2\" fill=\"var(--ic-accent)\"/>","Ubrania i akcesoria":"<path d=\"M8.7 4 4 6.7l1.9 3.3 2.1-1.2V20h8V8.8l2.1 1.2L20 6.7 15.3 4a3.4 3.4 0 0 1-6.6 0z\" fill=\"var(--ic-main)\"/><path d=\"M8.7 4a3.4 3.4 0 0 0 6.6 0l-1.6-.9a2 2 0 0 1-3.4 0z\" fill=\"var(--ic-accent)\"/>","Elektronika":"<rect x=\"3\" y=\"4.5\" width=\"18\" height=\"12\" rx=\"2\" fill=\"var(--ic-main)\"/><rect x=\"5.3\" y=\"6.7\" width=\"13.4\" height=\"7.6\" rx=\"1\" fill=\"var(--ic-accent)\"/><rect x=\"10.5\" y=\"16.5\" width=\"3\" height=\"3\" fill=\"var(--ic-main)\"/><rect x=\"8.5\" y=\"19\" width=\"7\" height=\"1.8\" rx=\".9\" fill=\"var(--ic-main)\"/>","Sprzęt":"<path d=\"M14.8 6.4a4 4 0 0 0-5.3 5L4 17v3h3l5.6-5.6a4 4 0 0 0 5-5.3l-2.6 2.6-2-2 2.7-2.3z\" fill=\"var(--ic-main)\"/><circle cx=\"6\" cy=\"18\" r=\"1\" fill=\"var(--ic-accent)\"/>","Wydarzenia":"<path d=\"M3 8.5A1.5 1.5 0 0 1 4.5 7H19.5A1.5 1.5 0 0 1 21 8.5a2 2 0 0 0 0 4 1.5 1.5 0 0 1-1.5 1.5H4.5A1.5 1.5 0 0 1 3 12.5a2 2 0 0 0 0-4z\" fill=\"var(--ic-main)\"/><rect x=\"13.2\" y=\"6.8\" width=\"1.6\" height=\"7.9\" rx=\".8\" fill=\"var(--ic-accent)\"/>","Jedzenie, napoje i tytoń":"<circle cx=\"12\" cy=\"12\" r=\"8.5\" fill=\"var(--ic-accent)\"/><path d=\"M9 5.5v4.2a1.6 1.6 0 0 0 1.1 1.5V18.5a.9.9 0 0 0 1.8 0V11.2A1.6 1.6 0 0 0 13 9.7V5.5h-1.2v3.7h-.6V5.5h-1.2v3.7h-.6V5.5z\" fill=\"var(--ic-main)\"/><path d=\"M16 5.5c-1.2 0-2 1.8-2 4 0 1.8.6 2.9 1.4 3.2v5.8a.9.9 0 0 0 1.8 0V5.5z\" fill=\"var(--ic-main)\"/>","Meble":"<path d=\"M3.5 12.5a2.2 2.2 0 0 1 2.2-2.2h12.6a2.2 2.2 0 0 1 2.2 2.2V18h-1.5v1.8h-1.6V18H6.6v1.8H5V18H3.5z\" fill=\"var(--ic-main)\"/><path d=\"M6.3 7.5a1.8 1.8 0 0 1 1.8-1.8h7.8a1.8 1.8 0 0 1 1.8 1.8v3H6.3z\" fill=\"var(--ic-main)\"/><rect x=\"7\" y=\"12.3\" width=\"10\" height=\"2.6\" rx=\"1\" fill=\"var(--ic-accent)\"/>","Gadżety i reklama":"<path d=\"M3 10v4h3l5 4V6l-5 4H3z\" fill=\"var(--ic-main)\"/><path d=\"M14.5 8.5a4.5 4.5 0 0 1 0 7l1.1 1.1a6 6 0 0 0 0-9.2z\" fill=\"var(--ic-accent)\"/>","Gry i zabawki":"<rect x=\"3\" y=\"8\" width=\"18\" height=\"9\" rx=\"4.5\" fill=\"var(--ic-main)\"/><path d=\"M7.2 11v3M5.7 12.5h3\" stroke=\"var(--ic-accent)\" stroke-width=\"1.6\" stroke-linecap=\"round\" fill=\"none\"/><circle cx=\"15.5\" cy=\"11.8\" r=\"1.1\" fill=\"var(--ic-accent)\"/><circle cx=\"17.6\" cy=\"13.8\" r=\"1.1\" fill=\"var(--ic-accent)\"/>","Zdrowie i uroda":"<rect x=\"9\" y=\"11\" width=\"6\" height=\"10\" rx=\"1\" fill=\"var(--ic-main)\"/><path d=\"M10.4 11V8l3-4.5 1.2.9L12.2 8.4V11z\" fill=\"var(--ic-accent)\"/>","Zdrowie i dobrostan":"<path d=\"M5 19c0-7.7 6.3-14 14-14 0 7.7-6.3 14-14 14z\" fill=\"var(--ic-main)\"/><path d=\"M6 18C9.5 14.5 13.5 11.5 17.3 9.6\" stroke=\"var(--ic-accent)\" stroke-width=\"1.5\" stroke-linecap=\"round\" fill=\"none\"/>","Dom i ogród":"<path d=\"M12 3.2 3.4 10.4l1.3 1.5.3-.3V21h14V11.6l.3.3 1.3-1.5z\" fill=\"var(--ic-main)\"/><rect x=\"10.2\" y=\"14.5\" width=\"3.6\" height=\"6.5\" rx=\".4\" fill=\"var(--ic-accent)\"/>","Biżuteria":"<path d=\"M6.2 4h11.6l3 4.8L12 20 3.2 8.8z\" fill=\"var(--ic-main)\"/><path d=\"M6.2 4h11.6l2.99 4.8H3.21z\" fill=\"var(--ic-accent)\"/>","Dzieci i niemowlęta":"<path d=\"M9 8.5h6V18a3 3 0 0 1-6 0z\" fill=\"var(--ic-main)\"/><path d=\"M9 13h6v5a3 3 0 0 1-6 0z\" fill=\"var(--ic-accent)\"/><path d=\"M10 8.5v-2h4v2zM11 3.5h2v2h-2z\" fill=\"var(--ic-main)\"/>","Głoska bezdźwięczna":"<circle cx=\"12\" cy=\"14.5\" r=\"2.3\" fill=\"var(--ic-main)\"/><path d=\"M8.4 11.2a5 5 0 0 1 7.2 0M6 8.8a8.4 8.4 0 0 1 12 0\" stroke=\"var(--ic-accent)\" stroke-width=\"1.8\" stroke-linecap=\"round\" fill=\"none\"/>","Materiały biurowe":"<path d=\"M5 19l1-3.5L16 5.5l2.5 2.5L8.5 18z\" fill=\"var(--ic-main)\"/><path d=\"M16 5.5 18.5 8l1.4-1.4a1.2 1.2 0 0 0 0-1.7l-.8-.8a1.2 1.2 0 0 0-1.7 0z\" fill=\"var(--ic-accent)\"/>","Inny":"<path d=\"M3.5 7.5 12 3l8.5 4.5v9L12 21l-8.5-4.5z\" fill=\"var(--ic-main)\"/><path d=\"M3.5 7.5 12 12l8.5-4.5L12 3z\" fill=\"var(--ic-accent)\"/>","Artykuły religijne i dewocyjne":"<rect x=\"9.2\" y=\"8.5\" width=\"5.6\" height=\"12.5\" rx=\"1\" fill=\"var(--ic-main)\"/><path d=\"M12 2.4c1.3 1 1.9 1.9 1.9 2.9A1.9 1.9 0 0 1 12 6.9 1.9 1.9 0 0 1 10.1 5.3c0-1 .6-1.9 1.9-2.9z\" fill=\"var(--ic-accent)\"/>","Sprzęt sportowy":"<rect x=\"3\" y=\"10\" width=\"3\" height=\"4\" rx=\"1\" fill=\"var(--ic-main)\"/><rect x=\"6\" y=\"8.5\" width=\"2.6\" height=\"7\" rx=\"1\" fill=\"var(--ic-main)\"/><rect x=\"15.4\" y=\"8.5\" width=\"2.6\" height=\"7\" rx=\"1\" fill=\"var(--ic-main)\"/><rect x=\"18\" y=\"10\" width=\"3\" height=\"4\" rx=\"1\" fill=\"var(--ic-main)\"/><rect x=\"8.6\" y=\"11\" width=\"6.8\" height=\"2\" fill=\"var(--ic-accent)\"/>","Akcesoria podróżne":"<rect x=\"4\" y=\"8\" width=\"16\" height=\"12\" rx=\"2\" fill=\"var(--ic-main)\"/><path d=\"M9 8V5.7A1.7 1.7 0 0 1 10.7 4h2.6A1.7 1.7 0 0 1 15 5.7V8h-1.6V5.9a.5.5 0 0 0-.5-.5h-1.8a.5.5 0 0 0-.5.5V8z\" fill=\"var(--ic-main)\"/><rect x=\"8.4\" y=\"8\" width=\"1.5\" height=\"12\" fill=\"var(--ic-accent)\"/><rect x=\"14.1\" y=\"8\" width=\"1.5\" height=\"12\" fill=\"var(--ic-accent)\"/>","Pojazdy i części":"<path d=\"M3 13.8l1.7-4.5A2.2 2.2 0 0 1 6.8 7.9h10.4a2.2 2.2 0 0 1 2.1 1.4l1.7 4.5V17a1 1 0 0 1-1 1h-.9a2.4 2.4 0 0 1-4.8 0H9.4a2.4 2.4 0 0 1-4.8 0H4a1 1 0 0 1-1-1z\" fill=\"var(--ic-main)\"/><path d=\"M6.7 9.9 5.7 12.4h5.1V9.9zM12.1 9.9v2.5h6.2l-1-2.5z\" fill=\"var(--ic-accent)\"/><circle cx=\"7\" cy=\"17.2\" r=\"1.2\" fill=\"#FFFFFF\"/><circle cx=\"17\" cy=\"17.2\" r=\"1.2\" fill=\"#FFFFFF\"/>"};
+
+const INDUSTRY_LABELS = { 'Głoska bezdźwięczna':'Media' };
+// AOV [z edrone (attributed), bez edrone (non_attributed)] w zł, wg branży
+const AOV_DATA = {
+  'Ubrania i akcesoria':[418.60,308.24],
+  'Zdrowie i dobrostan':[309.44,226.08],
+  'Zdrowie i uroda':[240.87,208.16],
+  'Zwierzęta i akcesoria dla zwierząt':[296.65,252.94],
+  'Jedzenie, napoje i tytoń':[291.68,224.10],
+  'Dom i ogród':[630.55,490.23],
+  'Głoska bezdźwięczna':[227.24,241.73],
+  'Biżuteria':[462.02,424.78],
+  'Dzieci i niemowlęta':[462.02,424.78],
+  'Sprzęt sportowy':[462.07,434.36],
+  'Meble':[2205.86,2381.74],
+  'Gry i zabawki':[333.92,256.83],
+  'Sztuka i rozrywka':[327.72,161.48],
+  'Elektronika':[1168.57,1222.63],
+  'Sprzęt':[1039.70,1046.11],
+  'Biznes i przemysł':[688.33,613.59],
+  'Gadżety i reklama':[279.13,218.31],
+  'Inny':[434.95,420.81],
+  'Artykuły religijne i dewocyjne':[233.95,221.78],
+  'Materiały biurowe':[659.11,430.16],
+  'Pojazdy i części':[1185.29,793.35],
+  'Akcesoria podróżne':[390.13,311.43],
+  'Artykuły dla dorosłych':[564.02,456.87],
+  'Wydarzenia':[425.98,360.32],
+};
+// Udział przychodu wg statusu odbiorcy [subscribed%, unknown%]
+const REV_SPLIT = {"Zwierzęta i akcesoria dla zwierząt":[72.5,27.5],"Artykuły dla dorosłych":[31.8,68.2],"Sztuka i rozrywka":[44.6,55.4],"Biznes i przemysł":[33.7,66.3],"Ubrania i akcesoria":[44.9,55.1],"Elektronika":[27.5,72.5],"Sprzęt":[26.1,73.9],"Wydarzenia":[40.4,59.6],"Jedzenie, napoje i tytoń":[40.7,59.3],"Meble":[49.7,50.3],"Gadżety i reklama":[23.5,76.5],"Gry i zabawki":[32.9,67.1],"Zdrowie i uroda":[43.2,56.8],"Zdrowie i dobrostan":[32.5,67.5],"Dom i ogród":[31,69],"Biżuteria":[35.9,64.1],"Dzieci i niemowlęta":[21,79],"Głoska bezdźwięczna":[20.5,79.5],"Materiały biurowe":[38.6,61.4],"Inny":[30.2,69.8],"Artykuły religijne i dewocyjne":[39.2,60.8],"Sprzęt sportowy":[31.5,68.5],"Akcesoria podróżne":[53.1,46.9],"Pojazdy i części":[18,82]};
+// Średni przychód na 1000 maili wg statusu [subscribed zł, unknown zł]
+const AVG_PER1000 = {"Zwierzęta i akcesoria dla zwierząt":[4283,1804],"Artykuły dla dorosłych":[1433,1127],"Sztuka i rozrywka":[1554,1247],"Biznes i przemysł":[1756,1251],"Ubrania i akcesoria":[1674,1270],"Elektronika":[1506,1263],"Sprzęt":[1367,1160],"Wydarzenia":[1312,1139],"Jedzenie, napoje i tytoń":[1911,1391],"Meble":[1344,1185],"Gadżety i reklama":[1320,1128],"Gry i zabawki":[2909,1636],"Zdrowie i uroda":[1750,1308],"Zdrowie i dobrostan":[2022,1390],"Dom i ogród":[1398,1163],"Biżuteria":[1575,1227],"Dzieci i niemowlęta":[1398,1206],"Głoska bezdźwięczna":[3381,1831],"Materiały biurowe":[2039,1187],"Inny":[1693,1637],"Artykuły religijne i dewocyjne":[2017,1173],"Sprzęt sportowy":[1437,1182],"Akcesoria podróżne":[1265,1107],"Pojazdy i części":[1487,1168]};
+// Najlepsze scenariusze wg % przychodu branży [nazwa, %]
+const ENGAGEMENTS = {"Zwierzęta i akcesoria dla zwierząt":[["Newsletter (kampanie)",79.05],["Porzucone koszyki",6.97],["Zapis do newslettera",5.74],["Odzyskiwanie klientów",5.62],["Rekomendacje",1.63],["Scenariusze własne",0.99]],"Artykuły dla dorosłych":[["Newsletter (kampanie)",41.59],["Zapis do newslettera",31.34],["Porzucone koszyki",10.92],["Scenariusze własne",6.04],["Odzyskiwanie klientów",5.82],["Rekomendacje",4.3]],"Sztuka i rozrywka":[["Newsletter (kampanie)",40.31],["Zapis do newslettera",22.4],["Porzucone koszyki",18.97],["Odzyskiwanie klientów",14.24],["Rekomendacje",2.34],["Scenariusze własne",1.74]],"Biznes i przemysł":[["Newsletter (kampanie)",31.4],["Zapis do newslettera",25.67],["Porzucone koszyki",16.75],["Odzyskiwanie klientów",11.49],["Scenariusze własne",10.61],["Rekomendacje",4.08]],"Ubrania i akcesoria":[["Newsletter (kampanie)",38.16],["Zapis do newslettera",24.51],["Porzucone koszyki",13.81],["Odzyskiwanie klientów",10.89],["Scenariusze własne",6.7],["Rekomendacje",5.91]],"Elektronika":[["Zapis do newslettera",37.57],["Newsletter (kampanie)",31.06],["Porzucone koszyki",11.92],["Odzyskiwanie klientów",9.7],["Scenariusze własne",7.7],["Rekomendacje",2.05]],"Sprzęt":[["Zapis do newslettera",33.68],["Newsletter (kampanie)",20.01],["Odzyskiwanie klientów",17.5],["Porzucone koszyki",15.81],["Rekomendacje",7.39],["Scenariusze własne",5.61]],"Wydarzenia":[["Newsletter (kampanie)",50.75],["Zapis do newslettera",34.49],["Rekomendacje",6.24],["Odzyskiwanie klientów",4.32],["Porzucone koszyki",4.2]],"Jedzenie, napoje i tytoń":[["Newsletter (kampanie)",50.16],["Zapis do newslettera",22.06],["Porzucone koszyki",11.92],["Odzyskiwanie klientów",6.37],["Scenariusze własne",5.3],["Rekomendacje",4.18]],"Meble":[["Zapis do newslettera",41.95],["Newsletter (kampanie)",15.84],["Porzucone koszyki",15.26],["Scenariusze własne",13.3],["Odzyskiwanie klientów",7.97],["Rekomendacje",5.68]],"Gadżety i reklama":[["Zapis do newslettera",33.69],["Newsletter (kampanie)",30.93],["Porzucone koszyki",17.24],["Odzyskiwanie klientów",8.66],["Scenariusze własne",5.25],["Rekomendacje",4.23]],"Gry i zabawki":[["Newsletter (kampanie)",45.14],["Zapis do newslettera",19.43],["Rekomendacje",10.91],["Odzyskiwanie klientów",10.17],["Porzucone koszyki",9.75],["Scenariusze własne",4.59]],"Zdrowie i uroda":[["Newsletter (kampanie)",45.51],["Zapis do newslettera",20.96],["Porzucone koszyki",12.18],["Odzyskiwanie klientów",9.66],["Scenariusze własne",6.78],["Rekomendacje",4.92]],"Zdrowie i dobrostan":[["Newsletter (kampanie)",36.98],["Zapis do newslettera",26.49],["Porzucone koszyki",13.95],["Odzyskiwanie klientów",11.28],["Rekomendacje",7.73],["Scenariusze własne",3.57]],"Dom i ogród":[["Zapis do newslettera",52.09],["Newsletter (kampanie)",16.18],["Porzucone koszyki",11.54],["Odzyskiwanie klientów",9.96],["Scenariusze własne",5.96],["Rekomendacje",4.27]],"Biżuteria":[["Zapis do newslettera",35.8],["Newsletter (kampanie)",22.79],["Porzucone koszyki",13.18],["Odzyskiwanie klientów",11.24],["Scenariusze własne",10.75],["Rekomendacje",6.24]],"Dzieci i niemowlęta":[["Zapis do newslettera",53.41],["Newsletter (kampanie)",16.35],["Odzyskiwanie klientów",12.27],["Scenariusze własne",8.07],["Porzucone koszyki",6.69],["Rekomendacje",3.22]],"Głoska bezdźwięczna":[["Zapis do newslettera",39.38],["Newsletter (kampanie)",28.22],["Porzucone koszyki",10.92],["Odzyskiwanie klientów",9.75],["Rekomendacje",7.34],["Scenariusze własne",4.38]],"Materiały biurowe":[["Newsletter (kampanie)",43.37],["Zapis do newslettera",23.11],["Porzucone koszyki",9.7],["Odzyskiwanie klientów",9.44],["Scenariusze własne",8.17],["Rekomendacje",6.2]],"Inny":[["Zapis do newslettera",33.57],["Newsletter (kampanie)",25.3],["Porzucone koszyki",13.42],["Odzyskiwanie klientów",11.52],["Scenariusze własne",9.73],["Rekomendacje",6.46]],"Artykuły religijne i dewocyjne":[["Newsletter (kampanie)",51.24],["Zapis do newslettera",18.2],["Porzucone koszyki",13.84],["Odzyskiwanie klientów",8.92],["Scenariusze własne",5.13],["Rekomendacje",2.68]],"Sprzęt sportowy":[["Zapis do newslettera",43.13],["Newsletter (kampanie)",25.39],["Porzucone koszyki",13.24],["Odzyskiwanie klientów",10.45],["Scenariusze własne",3.98],["Rekomendacje",3.82]],"Akcesoria podróżne":[["Zapis do newslettera",30.02],["Newsletter (kampanie)",26.57],["Scenariusze własne",20.6],["Porzucone koszyki",10.74],["Odzyskiwanie klientów",7.66],["Rekomendacje",4.4]],"Pojazdy i części":[["Zapis do newslettera",30.46],["Porzucone koszyki",20.03],["Newsletter (kampanie)",18.78],["Odzyskiwanie klientów",17.04],["Scenariusze własne",11.36],["Rekomendacje",2.33]]};
+// Najlepsze automatyzacje SMS — top 3 wg % przychodu SMS branży [nazwa, %]
+const ENGAGEMENTS_SMS = {"Zwierzęta i akcesoria dla zwierząt":[["Newsletter SMS",63.1],["Reaktywacja klientów",15.2],["Porzucone koszyki",9.1]],"Sztuka i rozrywka":[["Zapis SMS",40.1],["Porzucone koszyki",38.8],["Odzyskiwanie klientów (zaawans.)",11.7]],"Artykuły dla dorosłych":[["Porzucone koszyki",39.1],["Po zakupie",18.1],["Zapis SMS",18]],"Biznes i przemysł":[["Porzucone koszyki",38],["Po zakupie",35.3],["Newsletter SMS",10.4]],"Ubrania i akcesoria":[["Newsletter SMS",53.4],["Porzucone koszyki",26.3],["Zapis SMS",11.2]],"Elektronika":[["Zapis SMS",68.7],["Porzucone koszyki",14.7],["Odzyskiwanie klientów (zaawans.)",9.1]],"Sprzęt":[["Porzucone koszyki",30.8],["Odzyskiwanie klientów (zaawans.)",26.2],["Po zakupie",14.5]],"Wydarzenia":[["Po zakupie",51.4],["Zapis SMS",23.1],["Odzyskiwanie klientów (zaawans.)",13.5]],"Jedzenie, napoje i tytoń":[["Porzucone koszyki",36.7],["Zapis SMS",31.2],["Po zakupie",11.3]],"Meble":[["Zapis SMS",34.5],["Porzucone koszyki",29.2],["Po zakupie",20.7]],"Gadżety i reklama":[["Porzucone koszyki",67.9],["Zapis SMS",28.3],["Newsletter SMS",1.8]],"Gry i zabawki":[["Porzucone koszyki",76.4],["Zapis SMS",8.7],["Po zakupie",3.5]],"Zdrowie i uroda":[["Porzucone koszyki",27.6],["Newsletter SMS",27],["Zapis SMS",12.9]],"Zdrowie i dobrostan":[["Porzucone koszyki",29.6],["Newsletter SMS",22.1],["Zapis SMS",19.1]],"Dom i ogród":[["Zapis SMS",37],["Porzucone koszyki",28.5],["Po zakupie",14.6]],"Biżuteria":[["Zapis SMS",37.2],["Porzucone koszyki",18.9],["Po zakupie",18.3]],"Dzieci i niemowlęta":[["Porzucone koszyki",47.9],["Odzyskiwanie klientów (zaawans.)",12.4],["Newsletter SMS",12.2]],"Głoska bezdźwięczna":[["Porzucone koszyki",57.6],["Zapis SMS",17.7],["Newsletter SMS",9.5]],"Materiały biurowe":[["Po zakupie",34.5],["Porzucone koszyki",32.2],["Scenariusze własne",7.6]],"Inny":[["Porzucone koszyki",45],["Zapis SMS",21.6],["Po zakupie",21.1]],"Artykuły religijne i dewocyjne":[["Zapis SMS",74.2],["Porzucone koszyki",10.9],["Po zakupie",7.3]],"Sprzęt sportowy":[["Zapis SMS",52.7],["Porzucone koszyki",19.2],["Po zakupie",11.6]],"Akcesoria podróżne":[["Zapis SMS",45],["Porzucone koszyki",44],["Scenariusze własne",7.4]],"Pojazdy i części":[["Odzyskiwanie klientów (zaawans.)",55.6],["Porzucone koszyki",24],["Po zakupie",15.3]]};
+// Najlepsze automatyzacje WhatsApp — top 3 wg % (te same dla wszystkich branż) [nazwa, %]
+const ENGAGEMENTS_WA = [["Porzucone koszyki",43.1],["Newsletter WhatsApp",34.5],["Scenariusze własne",13.9]];
+// Udział kanałów w przychodzie wg branży [kanał, % udziału]
+const CHANNEL_MIX = {"Ubrania i akcesoria":[["Automatyzacje (Ready Flows)",54.53],["Newsletter (Email)",28.07],["SMS",11.7],["Custom Flow",5.7]],"Dom i ogród":[["Automatyzacje (Ready Flows)",81.11],["Newsletter (Email)",13.61],["Custom Flow",5.13],["SMS",0.15]],"Dzieci i niemowlęta":[["Automatyzacje (Ready Flows)",72.81],["Custom Flow",15.61],["Newsletter (Email)",11.56],["SMS",0.02]],"Zdrowie i dobrostan":[["Automatyzacje (Ready Flows)",71.33],["Newsletter (Email)",24.55],["Custom Flow",2.68],["SMS",1.44]],"Meble":[["Automatyzacje (Ready Flows)",81.31],["Custom Flow",11.81],["Newsletter (Email)",6.86],["SMS",0.02]],"Zwierzęta i akcesoria dla zwierząt":[["Newsletter (Email)",68.61],["Automatyzacje (Ready Flows)",29.39],["Custom Flow",1.54],["SMS",0.46]],"Zdrowie i uroda":[["Automatyzacje (Ready Flows)",49.31],["Newsletter (Email)",39.26],["Custom Flow",7.58],["SMS",3.85]],"Jedzenie, napoje i tytoń":[["Automatyzacje (Ready Flows)",50.87],["Newsletter (Email)",44.98],["Custom Flow",2.73],["SMS",1.42]],"Elektronika":[["Automatyzacje (Ready Flows)",65.23],["Newsletter (Email)",27.81],["Custom Flow",6.69],["SMS",0.27]],"Sprzęt":[["Automatyzacje (Ready Flows)",87.12],["Newsletter (Email)",9.9],["Custom Flow",2.91],["SMS",0.07]],"Biżuteria":[["Automatyzacje (Ready Flows)",73.9],["Newsletter (Email)",18.82],["Custom Flow",6.21],["SMS",1.06]],"Sprzęt sportowy":[["Automatyzacje (Ready Flows)",86.41],["Newsletter (Email)",11.57],["Custom Flow",2.01],["SMS",0.01]],"Biznes i przemysł":[["Automatyzacje (Ready Flows)",72.95],["Custom Flow",13.11],["Newsletter (Email)",13.02],["SMS",0.92]],"Sztuka i rozrywka":[["Automatyzacje (Ready Flows)",72.52],["Newsletter (Email)",26.66],["Custom Flow",0.81],["SMS",0.01]],"Głoska bezdźwięczna":[["Automatyzacje (Ready Flows)",75.81],["Newsletter (Email)",23.41],["Custom Flow",0.78],["Push",0]],"Pojazdy i części":[["Automatyzacje (Ready Flows)",64.1],["Newsletter (Email)",21.87],["Custom Flow",13.98],["SMS",0.05]],"Gry i zabawki":[["Automatyzacje (Ready Flows)",53.92],["Newsletter (Email)",41.89],["Custom Flow",4.19]],"Inny":[["Automatyzacje (Ready Flows)",71.75],["Newsletter (Email)",16.3],["Custom Flow",10.66],["SMS",1.29]],"Gadżety i reklama":[["Automatyzacje (Ready Flows)",72.35],["Newsletter (Email)",23.7],["Custom Flow",3.35],["SMS",0.6]],"Materiały biurowe":[["Automatyzacje (Ready Flows)",53.91],["Newsletter (Email)",38.04],["Custom Flow",8.05]],"Akcesoria podróżne":[["Automatyzacje (Ready Flows)",65.98],["Newsletter (Email)",22.59],["Custom Flow",11.12],["SMS",0.31]],"Artykuły dla dorosłych":[["Automatyzacje (Ready Flows)",59.7],["Newsletter (Email)",35.27],["Custom Flow",3.2],["SMS",1.84]],"Artykuły religijne i dewocyjne":[["Automatyzacje (Ready Flows)",60.69],["Newsletter (Email)",29.03],["Custom Flow",9.63],["SMS",0.65]],"Wydarzenia":[["Newsletter (Email)",81.14],["Automatyzacje (Ready Flows)",18.86]]};
+
+function iconSvg(name, size) {
+  const inner = INDUSTRY_ICONS[name] || '';
+  return `<svg class="ic" width="${size}" height="${size}" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">${inner}</svg>`;
+}
+function buildIndustryTiles() {
+  const wrap = document.getElementById('industryTiles');
+  const hidden = document.getElementById('industrySelect');
+  wrap.innerHTML = '';
+  Object.keys(INDUSTRY_ICONS).forEach(name => {
+    const tile = document.createElement('button');
+    tile.type = 'button';
+    tile.className = 'ind-tile';
+    tile.dataset.value = name;
+    tile.innerHTML = `${iconSvg(name, 26)}<span class="name">${INDUSTRY_LABELS[name] || name}</span>`;
+    tile.addEventListener('click', () => {
+      hidden.value = name;
+      wrap.querySelectorAll('.ind-tile').forEach(t => t.classList.toggle('active', t.dataset.value === name));
+      document.getElementById('indSelectedName').innerHTML =
+        `<span class="ind-sel-ic">${iconSvg(name, 22)}</span>Wybrana branża: ${INDUSTRY_LABELS[name] || name}`;
+      wrap.style.display = 'none';
+      document.getElementById('industrySelected').style.display = 'flex';
+      recalc();
+    });
+    wrap.appendChild(tile);
+  });
+  document.getElementById('indChange').addEventListener('click', () => {
+    document.getElementById('industrySelected').style.display = 'none';
+    document.getElementById('industryTiles').style.display = 'flex';
+  });
+}
+
+const LICENSE_TIERS = [
+  [0,250,100],[251,300,120],[301,350,140],[351,400,160],[401,450,180],
+  [451,500,195],[501,550,215],[551,600,235],[601,650,255],[651,700,275],
+  [701,750,295],[751,800,315],[801,850,335],[851,900,355],[901,950,375],
+  [951,1000,390],[1001,1150,410],[1151,1300,440],[1301,1450,465],
+  [1451,1600,490],[1601,1750,515],[1751,2000,540],[2001,2250,570],
+  [2251,2500,595],[2501,2750,620],[2751,3000,645],[3001,3250,705],
+  [3251,3500,750],[3501,3750,800],[3751,4000,845],[4001,4500,900],
+  [4501,5000,945],[5001,5500,995],[5501,6000,1040],[6001,6500,1095],
+  [6501,7000,1140],[7001,7500,1190],[7501,8000,1235],[8001,8500,1290],
+  [8501,9000,1335],[9001,9500,1385],[9501,10000,1430],[10001,11000,1485],
+  [11001,12000,1530],[12001,13000,1580],[13001,14000,1625],[14001,15000,1680],
+  [15001,16000,1725],[16001,17000,1775],[17001,18000,1820],[18001,19000,1875],
+  [19001,20000,1920],[20001,22000,1970],[22001,24000,2015],[24001,26000,2070],
+  [26001,28000,2115],[28001,30000,2165],[30001,32000,2210],[32001,34000,2265],
+  [34001,36000,2310],[36001,38000,2360],[38001,40000,2405],[40001,42000,2460],
+  [42001,44000,2505],[44001,46000,2555],[46001,48000,2600],[48001,50000,2680],
+  [50001,52500,2745],[52501,55000,2810],[55001,57500,2875],[57501,60000,2940],
+  [60001,62500,3005],[62501,65000,3070],[65001,67500,3135],[67501,70000,3200],
+  [70001,72500,3265],[72501,75000,3330],[75001,77500,3395],[77501,80000,3460],
+  [80001,82500,3525],[82501,85000,3590],[85001,87500,3655],[87501,90000,3720],
+  [90001,92500,3785],[92501,95000,3850],[95001,97500,3915],[97501,100000,3980],
+  [100001,105000,4045],[105001,110000,4110],[110001,115000,4175],[115001,120000,4240],
+  [120001,125000,4305],[125001,130000,4370],[130001,135000,4435],[135001,140000,4500],
+  [140001,145000,4565],[145001,150000,4630],[150001,155000,4695],[155001,160000,4760],
+  [160001,165000,4825],[165001,170000,4890],[170001,175000,4955],[175001,180000,5020],
+  [180001,185000,5085],[185001,190000,5150],[190001,195000,5215],[195001,200000,5280],
+  [200001,210000,5345],[210001,220000,5410],[220001,230000,5475],[230001,240000,5540],
+  [240001,250000,5605],[250001,260000,5670],[260001,270000,5735],[270001,280000,5800],
+  [280001,290000,5865],[290001,300000,5930],[300001,310000,5995],[310001,320000,6060],
+  [320001,330000,6125],[330001,340000,6190],[340001,350000,6255],[350001,360000,6320],
+  [360001,370000,6385],[370001,380000,6450],[380001,390000,6515],[390001,400000,6580],
+  [400001,410000,6645],[410001,420000,6710],[420001,430000,6775],[430001,440000,6840],
+  [440001,450000,6905],[450001,460000,6970],[460001,470000,7035],[470001,480000,7100],
+  [480001,490000,7165],[490001,500000,7230],[500001,520000,7295],[520001,540000,7360],
+  [540001,560000,7425],[560001,580000,7490],[580001,600000,7555],[600001,620000,7620],
+  [620001,640000,7685],[640001,660000,7750],[660001,680000,7815],[680001,700000,7880],
+  [700001,720000,7945],[720001,740000,8010],[740001,760000,8075],[760001,780000,8140],
+  [780001,800000,8205],[800001,820000,8270],[820001,840000,8335],[840001,860000,8400],
+  [860001,880000,8465],[880001,900000,8530],[900001,920000,8595],[920001,940000,8660],
+  [940001,960000,8725],[960001,980000,8790],[980001,1000000,8855],
+  [1000001,1020000,8920],[1020001,1040000,8985],[1040001,1060000,9050],
+  [1060001,1080000,9115],[1080001,1100000,9180],[1100001,1120000,9245],
+  [1120001,1140000,9310],[1140001,1160000,9375],[1160001,1180000,9440],
+  [1180001,1200000,9505],
+];
+
+// Snap points = upper bound of each license tier
+const LIC_SNAPS = LICENSE_TIERS.map(t => t[1]);
+
+// SMS snaps: representative values within each tier
+const SMS_SNAPS = [
+  0,
+  250, 500, 750,
+  1000, 2000, 3000, 4000, 5000,
+  6000, 7000, 8000, 9000, 10000,
+  15000, 20000, 30000, 40000, 50000,
+  60000, 70000, 80000, 90000, 100000,
+];
+
+// WhatsApp snaps
+const WA_SNAPS = [
+  0,
+  250, 500, 750,
+  1000, 2000, 3000, 4000, 5000,
+  6000, 7000, 8000, 9000, 10000,
+];
+
+// Kontakty objęte SMS — snapy: co 100 do 1000, potem co 250 do 50000
+const SMS_CONTACT_SNAPS = (() => {
+  const a = [];
+  for (let c = 0; c <= 1000; c += 100) a.push(c);
+  for (let c = 1250; c <= 50000; c += 250) a.push(c);
+  return a;
+})();
+
+// Liczba SMS na 1000 kontaktów wg branży: [SMS Newsletter, Engagement]
+const SMS_PER_1000 = {
+  'Zwierzęta i akcesoria dla zwierząt': [698, 270],
+  'Artykuły dla dorosłych': [1013, 384],
+  'Sztuka i rozrywka': [327, 197],
+  'Biznes i przemysł': [1197, 908],
+  'Ubrania i akcesoria': [1367, 187],
+  'Elektronika': [306, 88],
+  'Sprzęt': [564, 326],
+  'Wydarzenia': [2371, 326],
+  'Jedzenie, napoje i tytoń': [443, 192],
+  'Meble': [226, 187],
+  'Gadżety i reklama': [491, 389],
+  'Gry i zabawki': [709, 683],
+  'Zdrowie i uroda': [788, 187],
+  'Zdrowie i dobrostan': [579, 207],
+  'Dom i ogród': [225, 136],
+  'Biżuteria': [602, 269],
+  'Dzieci i niemowlęta': [430, 201],
+  'Głoska bezdźwięczna': [2258, 908],
+  'Materiały biurowe': [963, 908],
+  'Inny': [727, 189],
+  'Artykuły religijne i dewocyjne': [575, 279],
+  'Sprzęt sportowy': [427, 297],
+  'Akcesoria podróżne': [232, 162],
+  'Pojazdy i części': [920, 908],
+};
+
+// Średni Impact Rate (udział edrone w przychodzie) wg branży
+const IMPACT_RATE = {
+  'Zwierzęta i akcesoria dla zwierząt': 0.19,
+  'Artykuły dla dorosłych': 0.12,
+  'Sztuka i rozrywka': 0.22,
+  'Biznes i przemysł': 0.11,
+  'Ubrania i akcesoria': 0.19,
+  'Elektronika': 0.12,
+  'Sprzęt': 0.12,
+  'Wydarzenia': 0.13,
+  'Jedzenie, napoje i tytoń': 0.18,
+  'Meble': 0.12,
+  'Gadżety i reklama': 0.14,
+  'Gry i zabawki': 0.14,
+  'Zdrowie i uroda': 0.17,
+  'Zdrowie i dobrostan': 0.15,
+  'Dom i ogród': 0.14,
+  'Biżuteria': 0.13,
+  'Dzieci i niemowlęta': 0.13,
+  'Głoska bezdźwięczna': 0.12,
+  'Materiały biurowe': 0.17,
+  'Inny': 0.09,
+  'Artykuły religijne i dewocyjne': 0.24,
+  'Sprzęt sportowy': 0.13,
+  'Akcesoria podróżne': 0.19,
+  'Pojazdy i części': 0.13,
+};
+
+// Miesięczne proporcje wg branży: kontakty ÷ zamówienia oraz kontakty ÷ sesje
+const CONTACTS_TO_ORDERS = {
+  'Ubrania i akcesoria': 54.48, 'Dom i ogród': 53.88, 'Zdrowie i dobrostan': 31.5, 'Zdrowie i uroda': 40.12,
+  'Jedzenie, napoje i tytoń': 37.45, 'Głoska bezdźwięczna': 46.91, 'Zwierzęta i akcesoria dla zwierząt': 13.98,
+  'Meble': 60.54, 'Biżuteria': 56.32, 'Dzieci i niemowlęta': 48.59, 'Gry i zabawki': 75.39,
+  'Gadżety i reklama': 60.07, 'Sprzęt': 41.29, 'Elektronika': 50.83, 'Sprzęt sportowy': 44.91,
+  'Sztuka i rozrywka': 33.19, 'Pojazdy i części': 56.26, 'Biznes i przemysł': 19.86, 'Akcesoria podróżne': 81.81,
+  'Materiały biurowe': 60.46, 'Inny': 21.78, 'Artykuły religijne i dewocyjne': 87.87, 'Artykuły dla dorosłych': 70.25, 'Wydarzenia': 95.1,
+};
+const CONTACTS_TO_SESSIONS = {
+  'Ubrania i akcesoria': 0.7303, 'Dom i ogród': 0.5095, 'Zdrowie i dobrostan': 0.8241, 'Zdrowie i uroda': 1.0287,
+  'Jedzenie, napoje i tytoń': 0.7293, 'Głoska bezdźwięczna': 0.8462, 'Zwierzęta i akcesoria dla zwierząt': 1.131,
+  'Meble': 0.3412, 'Biżuteria': 0.6376, 'Dzieci i niemowlęta': 0.67, 'Gry i zabawki': 1.4858,
+  'Gadżety i reklama': 1.2579, 'Sprzęt': 0.2946, 'Elektronika': 0.6287, 'Sprzęt sportowy': 0.6402,
+  'Sztuka i rozrywka': 0.6325, 'Pojazdy i części': 0.3919, 'Biznes i przemysł': 0.3314, 'Akcesoria podróżne': 0.4937,
+  'Materiały biurowe': 0.8585, 'Inny': 0.3823, 'Artykuły religijne i dewocyjne': 2.0596, 'Artykuły dla dorosłych': 0.2666, 'Wydarzenia': 1.0157,
+};
+
+// Liczba SMS wynikająca z liczby kontaktów objętych SMS (na 1000 kontaktów × wskaźnik branży)
+function deriveSmsCount(contacts, newsletter, industry) {
+  const arr = SMS_PER_1000[industry];
+  if (!arr || contacts <= 0) return 0;
+  return Math.round((contacts / 1000) * (newsletter ? arr[0] : arr[1]));
+}
+
+// Impacted revenue (zł) attributed to edrone per 1000 contacts in base, by industry
+// Source: customer data export — impacted_revenue_per_1000_contacts
+const INDUSTRY_MULTIPLIERS = {
+  'Zwierzęta i akcesoria dla zwierząt': 2634,
+  'Sztuka i rozrywka': 1165,
+  'Artykuły dla dorosłych': 1222,
+  'Biznes i przemysł': 2537,
+  'Ubrania i akcesoria': 1483,
+  'Elektronika': 2376,
+  'Sprzęt': 2155,
+  'Wydarzenia': 307,
+  'Jedzenie, napoje i tytoń': 1149,
+  'Meble': 3108,
+  'Gadżety i reklama': 473,
+  'Gry i zabawki': 595,
+  'Zdrowie i uroda': 954,
+  'Zdrowie i dobrostan': 1417,
+  'Dom i ogród': 1246,
+  'Biżuteria': 1245,
+  'Dzieci i niemowlęta': 6422,
+  'Głoska bezdźwięczna': 456,
+  'Materiały biurowe': 1410,
+  'Inny': 1934,
+  'Artykuły religijne i dewocyjne': 812,
+  'Sprzęt sportowy': 1873,
+  'Akcesoria podróżne': 653,
+  'Pojazdy i części': 1605,
+};
+
+// Time-to-ROI medians (days) per industry × database size band
+// Source: customer data export — bands: 0-5k / 5k-10k / 10k-50k / 50k-100k / over 100k
+// Fallback = 42 days when industry/band has no data
+const TTR_DATA = {
+  'Zwierzęta i akcesoria dla zwierząt': {'0-5k':20,'5k-10k':9,'10k-50k':38,'50k-100k':20,'over 100k':20},
+  'Artykuły dla dorosłych':             {'0-5k':20,'5k-10k':28,'10k-50k':20,'50k-100k':69,'over 100k':20},
+  'Sztuka i rozrywka':                  {'0-5k':18,'5k-10k':20,'10k-50k':16,'50k-100k':20,'over 100k':21},
+  'Biznes i przemysł':                  {'0-5k':20,'5k-10k':20,'10k-50k':14,'50k-100k':41,'over 100k':20},
+  'Ubrania i akcesoria':                {'0-5k':20,'5k-10k':18.5,'10k-50k':22,'50k-100k':22,'over 100k':29.5},
+  'Elektronika':                        {'0-5k':2,'5k-10k':20,'10k-50k':7,'50k-100k':20,'over 100k':20},
+  'Sprzęt':                             {'0-5k':21,'5k-10k':20,'10k-50k':26,'50k-100k':20,'over 100k':20},
+  'Wydarzenia':                         {'0-5k':20,'5k-10k':20,'10k-50k':40,'50k-100k':20,'over 100k':20},
+  'Jedzenie, napoje i tytoń':           {'0-5k':18,'5k-10k':16,'10k-50k':20,'50k-100k':36.5,'over 100k':5},
+  'Meble':                              {'0-5k':7,'5k-10k':28,'10k-50k':37.5,'50k-100k':14,'over 100k':20},
+  'Gadżety i reklama':                  {'0-5k':20,'5k-10k':13,'10k-50k':20,'50k-100k':20,'over 100k':43},
+  'Zdrowie i uroda':                    {'0-5k':19,'5k-10k':38,'10k-50k':17,'50k-100k':28,'over 100k':23},
+  'Zdrowie i dobrostan':                {'0-5k':23,'5k-10k':10,'10k-50k':21,'50k-100k':15,'over 100k':20},
+  'Dom i ogród':                        {'0-5k':12,'5k-10k':8.5,'10k-50k':13,'50k-100k':13,'over 100k':45},
+  'Biżuteria':                          {'0-5k':20,'5k-10k':17,'10k-50k':21,'50k-100k':24,'over 100k':20},
+  'Dzieci i niemowlęta':                {'0-5k':21,'5k-10k':20,'10k-50k':39.5,'50k-100k':20,'over 100k':20},
+  'Materiały biurowe':                  {'0-5k':20,'5k-10k':20,'10k-50k':17,'50k-100k':20,'over 100k':20},
+  'Inny':                               {'0-5k':21,'5k-10k':57,'10k-50k':24,'50k-100k':24,'over 100k':11},
+  'Sprzęt sportowy':                    {'0-5k':19,'5k-10k':20,'10k-50k':22,'50k-100k':20,'over 100k':21},
+  'Akcesoria podróżne':                 {'0-5k':20,'5k-10k':20,'10k-50k':10,'50k-100k':20,'over 100k':20},
+  'Pojazdy i części':                   {'0-5k':20,'5k-10k':20,'10k-50k':40,'50k-100k':20,'over 100k':3},
+};
+
+function licMaxToBand(licMax) {
+  if (licMax <= 5000)   return '0-5k';
+  if (licMax <= 10000)  return '5k-10k';
+  if (licMax <= 50000)  return '10k-50k';
+  if (licMax <= 100000) return '50k-100k';
+  return 'over 100k';
+}
+
+// ── Average monthly revenue (zł) of edrone clients by database size band ──
+// Source: customer data export — 12 months of cooperation
+const REVENUE_BY_MONTH = {
+  '0-5k':      [1776,3734,4697,4943,5916,6937,6613,5545,6201,4466,4810,5629],
+  '5-10k':     [5025,17758,18913,23178,16349,23001,25041,23866,19198,18197,21043,41415],
+  '10-25k':    [7479,26243,26719,31494,34952,25518,33147,30889,29811,23121,30889,52110],
+  '25-50k':    [13272,46902,42569,38077,39879,56806,54712,87106,55336,61051,72254,80762],
+  '50k-100k':  [47169,70621,64713,78086,58124,69087,79080,54418,67352,68807,112385,122160],
+  'over 100k': [61320,91807,84127,101512,75561,89812,102803,70743,87558,89448,146101,158808],
+};
+const REV_BAND_LABELS = {
+  '0-5k':'0–5 tys.', '5-10k':'5–10 tys.', '10-25k':'10–25 tys.',
+  '25-50k':'25–50 tys.', '50k-100k':'50–100 tys.', 'over 100k':'ponad 100 tys.'
+};
+
+// Bands for this chart differ from TTR (10-25k / 25-50k split out)
+function licMaxToRevBand(licMax) {
+  if (licMax <= 5000)   return '0-5k';
+  if (licMax <= 10000)  return '5-10k';
+  if (licMax <= 25000)  return '10-25k';
+  if (licMax <= 50000)  return '25-50k';
+  if (licMax <= 100000) return '50k-100k';
+  return 'over 100k';
+}
+
+function fmtCompactZl(v) {
+  if (v >= 10000) return (v/1000).toLocaleString('pl-PL',{maximumFractionDigits:0}) + ' tys.';
+  if (v >= 1000)  return (v/1000).toLocaleString('pl-PL',{maximumFractionDigits:1}) + ' tys.';
+  return v.toLocaleString('pl-PL');
+}
+
+const REV_VB = { W:1040, H:340, padX:14, padT:46, padB:30 };
+let revChartBuilt = false;
+function buildRevChart() {
+  const svg = document.getElementById('revChartSvg');
+  const { W, H, padX, padT, padB } = REV_VB;
+  const plotW = W - padX*2, plotH = H - padT - padB, baseY = H - padB;
+  const slot = plotW/12, bw = Math.min(56, slot*0.62);
+  let html = `<line x1="${padX}" y1="${baseY}" x2="${W-padX}" y2="${baseY}" stroke="#E0E0CE" stroke-width="1"/>`;
+  for (let i=0;i<12;i++) {
+    const cx = padX + slot*i + slot/2, x = cx - bw/2;
+    html += `<g class="rev-bar-g">`
+         +  `<rect class="seg-base" id="revBase${i}" x="${x.toFixed(1)}" y="${baseY}" width="${bw.toFixed(1)}" height="0"><title id="revTip${i}"></title></rect>`
+         +  `<rect class="seg-sms"  id="revSms${i}"  x="${x.toFixed(1)}" y="${baseY}" width="${bw.toFixed(1)}" height="0"></rect>`
+         +  `<rect class="seg-wa"   id="revWa${i}"   x="${x.toFixed(1)}" y="${baseY}" width="${bw.toFixed(1)}" height="0"></rect>`
+         +  `<text class="rev-bar-val" id="revVal${i}" x="${cx.toFixed(1)}" y="${baseY}" text-anchor="middle"></text>`
+         +  `<text class="rev-bar-month" x="${cx.toFixed(1)}" y="${(baseY+18).toFixed(1)}" text-anchor="middle">${i+1}. miesiąc</text>`
+         +  `</g>`;
+  }
+  // ROI overlay: cumulative ROI line + month markers (positions set in render)
+  html += `<polyline id="revRoiLine" fill="none" stroke="#1A1A1A" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" points=""/>`;
+  for (let i=0;i<12;i++) {
+    const cx = padX + slot*i + slot/2;
+    html += `<circle id="revRoiDot${i}" cx="${cx.toFixed(1)}" cy="${baseY}" r="3.5" fill="#FFFFFF" stroke="#1A1A1A" stroke-width="2"><title id="revRoiTip${i}"></title></circle>`;
+  }
+  html += `<text id="revRoiMax" class="rev-axis-r" x="${(W-padX).toFixed(1)}" y="${(padT-16).toFixed(1)}" text-anchor="end"></text>`;
+  svg.innerHTML = html;
+  svg.dataset.baseY = baseY; svg.dataset.plotH = plotH;
+  revChartBuilt = true;
+}
+function renderRevChart(licMax, licLabel, totalCost, smsRev, waRev) {
+  if (!revChartBuilt) buildRevChart();
+  const band = licMaxToRevBand(licMax);
+  const baseArr = REVENUE_BY_MONTH[band];
+  const sms = smsRev || 0, wa = waRev || 0;
+  const total = baseArr.map(v => v + sms + wa);
+  const svg = document.getElementById('revChartSvg');
+  const baseY = +svg.dataset.baseY, plotH = +svg.dataset.plotH;
+  const F = plotH * 0.62;
+  const scaleMax = Math.max.apply(null, total) || 1;
+
+  const setSeg = (id,y,h) => { const r=document.getElementById(id); r.setAttribute('y',y.toFixed(1)); r.setAttribute('height',Math.max(0,h).toFixed(1)); };
+  for (let i=0;i<12;i++) {
+    const hBase = (baseArr[i]/scaleMax)*F, hSms = (sms/scaleMax)*F, hWa = (wa/scaleMax)*F;
+    setSeg('revBase'+i, baseY-hBase, hBase);
+    setSeg('revSms'+i,  baseY-hBase-hSms, hSms);
+    setSeg('revWa'+i,   baseY-hBase-hSms-hWa, hWa);
+    const hTot = hBase+hSms+hWa;
+    const val = document.getElementById('revVal'+i);
+    val.setAttribute('y', (baseY-hTot-7).toFixed(1));
+    val.textContent = fmtCompactZl(total[i]) + ' zł';
+    let tip = `${i+1}. mc: ${total[i].toLocaleString('pl-PL')} zł — baza ${baseArr[i].toLocaleString('pl-PL')}`;
+    if (sms>0) tip += `, SMS ${sms.toLocaleString('pl-PL')}`;
+    if (wa>0)  tip += `, WhatsApp ${wa.toLocaleString('pl-PL')}`;
+    document.getElementById('revTip'+i).textContent = tip;
+  }
+  document.getElementById('revChartSub').textContent =
+    `Baza: ${licLabel} kontaktów · przedział ${REV_BAND_LABELS[band]}`;
+
+  // Monthly ROI on TOTAL cost (license + modules)
+  const { W:RW, padX:RPX } = REV_VB;
+  const rslot = (RW - RPX*2)/12;
+  const roi = total.map(v => totalCost > 0 ? (v/totalCost)*100 : 0);
+  const roiMax = Math.max.apply(null, roi) || 1;
+  const pts = [];
+  for (let i=0;i<12;i++) {
+    const cx = RPX + rslot*i + rslot/2;
+    const cy = baseY - (plotH*0.72 + (roi[i]/roiMax)*plotH*0.28);
+    pts.push(cx.toFixed(1)+','+cy.toFixed(1));
+    document.getElementById('revRoiDot'+i).setAttribute('cy', cy.toFixed(1));
+    document.getElementById('revRoiTip'+i).textContent =
+      `${i+1}. mc: ROI ${Math.round(roi[i]).toLocaleString('pl-PL')}%`;
+  }
+  document.getElementById('revRoiLine').setAttribute('points', pts.join(' '));
+  document.getElementById('revRoiMax').textContent =
+    'ROI do ' + Math.round(roiMax).toLocaleString('pl-PL') + '%';
+
+  // Legend (only show segments that contribute)
+  let leg = `<span class="rev-leg-item"><span class="rev-leg-sw" style="background:#ECFF5A"></span>Przychód z bazy klientów</span>`;
+  if (sms>0) leg += `<span class="rev-leg-item"><span class="rev-leg-sw" style="background:#1A1A1A"></span>Obrót z SMS</span>`;
+  if (wa>0)  leg += `<span class="rev-leg-item"><span class="rev-leg-sw" style="background:#34B27B"></span>Obrót z WhatsApp</span>`;
+  leg += `<span class="rev-leg-item"><span class="rev-leg-line"></span>Miesięczne ROI na koszcie całkowitym</span>`;
+  document.getElementById('revLegend').innerHTML = leg;
+}
+
+// Monthly base growth by current size (lower-inclusive: 10 000 → przedział 10–20k = 246)
+function growthForContacts(c) {
+  if (c >= 500000) return 8460;
+  if (c >= 350000) return 3461;
+  if (c >= 250000) return 2442;
+  if (c >= 200000) return 2148;
+  if (c >= 150000) return 1743;
+  if (c >= 100000) return 1691;
+  if (c >= 80000)  return 1138;
+  if (c >= 50000)  return 852;
+  if (c >= 30000)  return 667;
+  if (c >= 20000)  return 424;
+  if (c >= 10000)  return 246;
+  if (c >= 5000)   return 141;
+  if (c >= 1000)   return 58;
+  return 6;
+}
+// Net license price for an arbitrary contact count
+function licPriceForContacts(c) {
+  for (const t of LICENSE_TIERS) { if (c <= t[1]) return t[2]; }
+  return LICENSE_TIERS[LICENSE_TIERS.length-1][2];
+}
+
+let licChartBuilt = false;
+function buildLicChart() {
+  const svg = document.getElementById('licChartSvg');
+  const { W, H, padX, padT, padB } = REV_VB;
+  const plotW = W - padX*2, plotH = H - padT - padB, baseY = H - padB;
+  const slot = plotW/12, bw = Math.min(56, slot*0.62);
+  let html = `<line x1="${padX}" y1="${baseY}" x2="${W-padX}" y2="${baseY}" stroke="#E0E0CE" stroke-width="1"/>`;
+  for (let i=0;i<12;i++) {
+    const cx = padX + slot*i + slot/2, x = cx - bw/2;
+    html += `<g class="rev-bar-g">`
+         +  `<rect class="lic-bar" id="licBar${i}" x="${x.toFixed(1)}" y="${baseY}" width="${bw.toFixed(1)}" height="0" rx="4"><title id="licTip${i}"></title></rect>`
+         +  `<text class="rev-bar-val" id="licVal${i}" x="${cx.toFixed(1)}" y="${baseY}" text-anchor="middle"></text>`
+         +  `<text class="rev-bar-month" x="${cx.toFixed(1)}" y="${(baseY+18).toFixed(1)}" text-anchor="middle">${i+1}. miesiąc</text>`
+         +  `</g>`;
+  }
+  svg.innerHTML = html;
+  svg.dataset.baseY = baseY; svg.dataset.plotH = plotH;
+  licChartBuilt = true;
+}
+function renderLicChart(startContacts, discPct) {
+  if (!licChartBuilt) buildLicChart();
+  const svg = document.getElementById('licChartSvg');
+  const baseY = +svg.dataset.baseY, plotH = +svg.dataset.plotH;
+  const prices = [], conts = [];
+  let c = startContacts;
+  for (let i=0;i<12;i++) {
+    conts.push(c);
+    prices.push(applyDisc(licPriceForContacts(c), discPct));
+    c += growthForContacts(c);
+  }
+  const scaleMax = Math.max.apply(null, prices) || 1;
+  for (let i=0;i<12;i++) {
+    const h = (prices[i]/scaleMax)*plotH*0.78;
+    const r = document.getElementById('licBar'+i);
+    r.setAttribute('y',(baseY-h).toFixed(1));
+    r.setAttribute('height',Math.max(0,h).toFixed(1));
+    const v = document.getElementById('licVal'+i);
+    v.setAttribute('y',(baseY-h-7).toFixed(1));
+    v.textContent = fmtInt(Math.round(prices[i])) + ' zł';
+    document.getElementById('licTip'+i).textContent =
+      `${i+1}. mc: ${fmtInt(Math.round(conts[i]))} kontaktów → ${prices[i].toLocaleString('pl-PL')} zł`;
+  }
+  const g = growthForContacts(startContacts);
+  document.getElementById('licChartSub').textContent =
+    `Start: ${fmtInt(startContacts)} kontaktów · wzrost ~${fmtInt(g)} / mc` + (discPct>0 ? ` · rabat ${discPct}%` : '');
+
+  const diff = Math.round(prices[11]) - Math.round(prices[0]);
+  const sign = diff > 0 ? '+' : (diff < 0 ? '−' : '');
+  document.getElementById('licDiffVal').textContent = sign + fmtInt(Math.abs(diff)) + ' zł';
+}
+
+const SMS_TIERS = [
+  [1,1000,0.15],[1001,5000,0.14],[5001,10000,0.12],
+  [10001,50000,0.11],[50001,100000,0.10],[100001,200000,0.09],[200001,Infinity,0.08],
+];
+const WA_TIERS = [
+  [1,1000,0.29],[1001,10000,0.27],[10001,Infinity,0.25],
+];
+
+// edrone Reviews snaps
+const REC_SNAPS = [
+  0, 50, 100, 150, 250, 500, 1000, 1500, 2000, 3000, 3500, 5000, 7500, 10000, 15000, 20000
+];
+
+// 49 zł for the first 150 orders, then 0.29 zł per order above 150
+function calcRecPrice(n) {
+  if (n <= 0) return 0;
+  let price = 49;                             // do 150
+  if (n > 150) price += 149;                  // 151–500
+  if (n > 500) price += 299;                  // 501–1000
+  if (n > 1000) price += (n - 1000) * 0.29;   // powyżej 1000
+  return Math.round(price * 100) / 100;
+}
+
+// edrone AI chat snaps (liczba konwersacji / miesiąc)
+const AI_SNAPS = [
+  0, 50, 100, 250, 500, 1000, 2500, 5000, 7500, 10000, 15000, 20000, 30000, 50000
+];
+
+// Cena za konwersację wg progu łącznej liczby konwersacji (zł)
+const AI_TIERS = [
+  [1, 50, 2.50], [51, 100, 2.40], [101, 250, 2.30], [251, 500, 2.20], [501, 1000, 2.10],
+  [1001, 2500, 2.00], [2501, 5000, 1.80], [5001, 7500, 1.65], [7501, 10000, 1.50], [10001, Infinity, 1.50],
+];
+
+function calcAiPrice(n) {
+  if (n <= 0) return 0;
+  return Math.round(n * getRate(n, AI_TIERS) * 100) / 100;
+}
+
+// Ramki rekomendacji AI snaps (views / month)
+const RF_SNAPS = [
+  0, 5000, 10000, 25000, 50000, 100000, 150000,
+  200000, 300000, 500000, 700000, 1000000
+];
+
+// Flat monthly price per view tier [from, to, price PLN]
+const RF_TIERS = [
+  [0,5000,40],[5001,10000,80],[10001,15000,120],[15001,20000,160],[20001,25000,200],
+  [25001,30000,240],[30001,35000,280],[35001,40000,325],[40001,45000,365],[45001,50000,405],
+  [50001,55000,445],[55001,60000,485],[60001,65000,525],[65001,70000,565],[70001,75000,605],
+  [75001,80000,645],[80001,85000,685],[85001,90000,725],[90001,95000,765],[95001,100000,805],
+  [100001,110000,885],[110001,120000,970],[120001,130000,1050],[130001,140000,1130],[140001,150000,1210],
+  [150001,160000,1290],[160001,170000,1370],[170001,180000,1450],[180001,190000,1530],[190001,200000,1615],
+  [200001,225000,1815],[225001,250000,2015],[250001,275000,2220],[275001,300000,2420],[300001,325000,2620],
+  [325001,350000,2820],[350001,375000,3025],[375001,400000,3225],[400001,425000,3425],[425001,450000,3630],
+  [450001,475000,3830],[475001,500000,4030],[500001,600000,4840],[600001,700000,5645],[700001,800000,6450],
+  [800001,900000,7255],[900001,1000000,8065]
+];
+
+function calcRfPrice(n) {
+  if (n <= 0) return 0;
+  for (const t of RF_TIERS) { if (n <= t[1]) return t[2]; }
+  return RF_TIERS[RF_TIERS.length-1][2]; // cap at top tier
+}
+
+// Revenue generated by sends, added to edrone-generated revenue (marginal, per 1000)
+// SMS:  1k–10k → 5000/1k · 10k–20k → 4500/1k · >20k → 4000/1k
+function smsRevenue(n) {
+  if (n <= 0) return 0;
+  let r = (Math.min(n,10000)/1000) * 5000;
+  if (n > 10000) r += (Math.min(n,20000)-10000)/1000 * 4500;
+  if (n > 20000) r += (n-20000)/1000 * 4000;
+  return r;
+}
+// WhatsApp:  1k–10k → 6750/1k · 10k–20k → 6000/1k · >20k → 5000/1k
+function waRevenue(n) {
+  if (n <= 0) return 0;
+  let r = (Math.min(n,10000)/1000) * 6750;
+  if (n > 10000) r += (Math.min(n,20000)-10000)/1000 * 6000;
+  if (n > 20000) r += (n-20000)/1000 * 5000;
+  return r;
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────
+
+function getRate(n, tiers) {
+  return tiers.find(([min,max]) => n >= min && n <= max)?.[2] ?? tiers[tiers.length-1][2];
+}
+
+function fmt(n) {
+  return n.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' zł';
+}
+function fmtInt(n) { return n.toLocaleString('pl-PL'); }
+
+function setFill(slider, fillEl) {
+  const pct = (slider.value / slider.max) * 100;
+  fillEl.style.width = pct + '%';
+}
+
+const PIE_COLORS = ['#C9A227', '#E0CC79', '#1C2E4A', '#1A1A1A']; // 1. złoty, 2. jaśniejszy złoty, 3. granat, 4. czarny
+function renderChannelPie(industry, baseRevenue) {
+  const data = CHANNEL_MIX[industry];
+  const sec = document.getElementById('pieSection');
+  if (!data || !data.length) { sec.style.display = 'none'; return; }
+  sec.style.display = 'block';
+  const rev = baseRevenue || 0;
+  const slices = data.slice().sort((a, b) => b[1] - a[1]);
+  const total = slices.reduce((a, s) => a + s[1], 0) || 1;
+  const cx = 110, cy = 110, r = 100;
+  let ang = -Math.PI / 2, paths = '', leg = '';
+  slices.forEach((s, i) => {
+    const color = PIE_COLORS[Math.min(i, PIE_COLORS.length - 1)];
+    const frac = s[1] / total;
+    const amt = Math.round(rev * frac);
+    if (slices.length === 1 || frac >= 0.999) {
+      paths += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${color}"/>`;
+    } else {
+      const a2 = ang + frac * Math.PI * 2;
+      const x1 = cx + r * Math.cos(ang), y1 = cy + r * Math.sin(ang);
+      const x2 = cx + r * Math.cos(a2), y2 = cy + r * Math.sin(a2);
+      const large = (a2 - ang) > Math.PI ? 1 : 0;
+      paths += `<path d="M${cx} ${cy} L${x1.toFixed(2)} ${y1.toFixed(2)} A${r} ${r} 0 ${large} 1 ${x2.toFixed(2)} ${y2.toFixed(2)} Z" fill="${color}"/>`;
+      ang = a2;
+    }
+    leg += `<div class="pie-leg-row"><span class="pie-leg-sw" style="background:${color}"></span><span class="pie-leg-name">${s[0]}</span>${rev > 0 ? `<span class="pie-leg-amt">${fmtInt(amt)} zł</span>` : ''}<span class="pie-leg-pct">${s[1].toLocaleString('pl-PL')}%</span></div>`;
+  });
+  document.getElementById('pieSvg').innerHTML = paths;
+  document.getElementById('pieLegend').innerHTML = leg;
+  const pieSub = document.getElementById('pieSub');
+  if (pieSub) pieSub.textContent = rev > 0 ? `Szacowany przychód generowany przez edrone: ${fmtInt(rev)} zł/mies. — w rozbiciu na kanały` : '';
+}
+
+// Rekomendowane wolumeny modułów dla danej liczby kontaktów i branży
+function recommendedVolumes(industry, contacts) {
+  const c2o = CONTACTS_TO_ORDERS[industry];
+  const c2s = CONTACTS_TO_SESSIONS[industry];
+  // SMS: ta sama proporcja branżowa co sekcja SMS, ale zakładamy newsletter (kolumna Newsletter). Klient może skorygować liczbę w sekcji SMS.
+  const smsManual = Math.max(0, Math.round(parseFloat(document.getElementById('smsUnits').value) || 0));
+  const sms = smsManual > 0 ? smsManual : deriveSmsCount(contacts, true, industry);
+  let orders = (c2o && contacts > 0) ? Math.round(contacts / c2o) : 0;
+  if (contacts > 100000) orders = Math.round(contacts / 100); // powyżej 100k bazy: 1% kontaktów (1 mln → 10 000 zamówień)
+  const sessions = (c2s && contacts > 0) ? Math.round(contacts / c2s) : 0;
+  const conv = Math.round(sessions * 0.025 / 4); // AI chat = 2,5% sesji / 4 (proporcja 4× mniejsza)
+  return { sms, orders, sessions, conv };
+}
+
+function renderPackages(industry, contacts) {
+  const sec = document.getElementById('packagesSection');
+  if (!industry || !CONTACTS_TO_ORDERS[industry]) { sec.style.display = 'none'; return; }
+  sec.style.display = 'block';
+  const licFinal = state.lic;
+  const v = recommendedVolumes(industry, contacts);
+  const smsCost = v.sms > 0 ? Math.round(v.sms * getRate(v.sms, SMS_TIERS) * 100) / 100 : 0;
+  const recCost = calcRecPrice(v.orders);
+  const aiCost = calcAiPrice(v.conv);
+  const fullTotal = licFinal + smsCost + recCost + aiCost;
+
+  document.getElementById('packagesSub').textContent = `dla ${fmtInt(contacts)} kontaktów · ${INDUSTRY_LABELS[industry] || industry}`;
+  document.getElementById('pkgBasicPrice').textContent = fmt(licFinal);
+  document.getElementById('pkgBasicList').innerHTML =
+    `<li>Licencja (${fmtInt(contacts)} kontaktów)</li>` +
+    `<li>Prognozowany przychód + rozbicie na kanały</li>`;
+  document.getElementById('pkgFullPrice').textContent = fmt(fullTotal);
+  document.getElementById('pkgFullList').innerHTML =
+    `<li>Licencja — ${fmt(licFinal)}</li>` +
+    `<li>SMS: ${fmtInt(v.sms)} SMS/mies. — ${fmt(smsCost)}</li>` +
+    `<li>edrone Reviews: ${fmtInt(v.orders)} zam./mies. — ${fmt(recCost)}</li>` +
+    `<li>edrone AI chat: ${fmtInt(v.conv)} konw./mies. — ${fmt(aiCost)}</li>`;
+}
+
+const TTR_BANDS = ['0-5k','5k-10k','10k-50k','50k-100k','over 100k'];
+function ttrColor(v, min, max) {
+  const t = max > min ? (v - min) / (max - min) : 0;
+  const L = 90 - t * 56; // mała wartość → jaśniejszy złoty; duża → ciemniejszy (gorszy)
+  return { bg: `hsl(43,72%,${L.toFixed(1)}%)`, fg: L < 52 ? '#FFFFFF' : '#3A2E08' };
+}
+function buildTtrTable() {
+  const tbody = document.getElementById('ttrTbody');
+  if (!tbody) return;
+  let min = Infinity, max = -Infinity;
+  Object.values(TTR_DATA).forEach(row => TTR_BANDS.forEach(b => {
+    const v = row[b]; if (v != null) { if (v < min) min = v; if (v > max) max = v; }
+  }));
+  let html = '';
+  Object.keys(TTR_DATA).forEach(name => {
+    const row = TTR_DATA[name];
+    let cells = `<td class="ttr-name">${INDUSTRY_LABELS[name] || name}</td>`;
+    TTR_BANDS.forEach(b => {
+      const v = row[b];
+      const c = ttrColor(v, min, max);
+      cells += `<td><span class="ttr-cell" style="background:${c.bg};color:${c.fg}">${v.toLocaleString('pl-PL')}</span></td>`;
+    });
+    html += `<tr data-ind="${name}">${cells}</tr>`;
+  });
+  tbody.innerHTML = html;
+}
+
+function nearestSnapIdx(snaps, val) {
+  let best = 0, bd = Infinity;
+  for (let i = 0; i < snaps.length; i++) {
+    const d = Math.abs(snaps[i] - val);
+    if (d < bd) { bd = d; best = i; }
+  }
+  return best;
+}
+
+// ── Init sliders ──────────────────────────────────────────────────────────
+
+function initSlider(id, snaps) {
+  const el = document.getElementById(id);
+  el.max = snaps.length - 1;
+  el.value = 0;
+}
+
+initSlider('licSlider', LIC_SNAPS);
+initSlider('smsSlider', SMS_SNAPS);
+initSlider('smsBaseSlider', SMS_CONTACT_SNAPS);
+initSlider('waSlider', WA_SNAPS);
+initSlider('recSlider', REC_SNAPS);
+initSlider('aiSlider', AI_SNAPS);
+initSlider('rfSlider', RF_SNAPS);
+
+// ── State ─────────────────────────────────────────────────────────────────
+
+let state = { lic: 0, sms: 0, wa: 0, rec: 0, ai: 0, rf: 0, smsOn: true, waOn: true, recOn: true, aiOn: true, rfOn: true };
+
+// ── Helpers: discount ─────────────────────────────────────────────────────
+
+function getDiscount(id) {
+  return Math.min(Math.max(parseFloat(document.getElementById(id).value) || 0, 0), 100);
+}
+function applyDisc(price, pct) {
+  return Math.round(price * (1 - pct / 100) * 100) / 100;
+}
+function setSumValue(elId, original, discounted, discPct) {
+  const el = document.getElementById(elId);
+  if (discPct > 0) {
+    el.innerHTML = `<span class="srow-original">${fmt(original)}</span>${fmt(discounted)}`;
+  } else {
+    el.textContent = fmt(discounted);
+  }
+  el.className = 'srow-value';
+}
+
+// ── Recalculate ───────────────────────────────────────────────────────────
+
+function recalc() {
+  const industry = document.getElementById('industrySelect').value;
+  // Licencja
+  const licIdx = parseInt(document.getElementById('licSlider').value);
+  const licMax = LIC_SNAPS[licIdx];
+  const licMin = licIdx === 0 ? 0 : LICENSE_TIERS[licIdx][0];
+  const licPrice = LICENSE_TIERS[licIdx][2];
+  const licDisc = getDiscount('licDiscount');
+  const licFinal = applyDisc(licPrice, licDisc);
+  state.lic = licFinal;
+
+  const licLabel = licIdx === 0 ? `do ${fmtInt(licMax)}` : `${fmtInt(licMin)} – ${fmtInt(licMax)}`;
+  document.getElementById('licRangeLabel').textContent = licLabel;
+  document.getElementById('licPriceDisplay').textContent = fmt(licFinal);
+  setFill(document.getElementById('licSlider'), document.getElementById('licFill'));
+
+  // SMS — lime pasek = liczba SMS/mies. (napędza koszt); czarny pasek = kontakty SMS w bazie (podstawa sugestii)
+  const smsOn = document.getElementById('smsToggle').checked;
+  state.smsOn = smsOn;
+  const smsNewsletter = document.getElementById('smsNewsletter').checked;
+
+  const smsBaseSliderEl = document.getElementById('smsBaseSlider');
+  const smsBaseContacts = Math.max(0, Math.round(parseFloat(document.getElementById('smsBaseUnits').value) || 0));
+  smsBaseSliderEl.value = nearestSnapIdx(SMS_CONTACT_SNAPS, smsBaseContacts);
+  const smsSuggested = deriveSmsCount(smsBaseContacts, smsNewsletter, industry);
+
+  const smsSliderEl = document.getElementById('smsSlider');
+  const smsCount = Math.max(0, Math.round(parseFloat(document.getElementById('smsUnits').value) || 0));
+  smsSliderEl.value = nearestSnapIdx(SMS_SNAPS, smsCount);
+  const smsRate = smsCount > 0 ? getRate(smsCount, SMS_TIERS) : 0;
+  const smsBase = Math.round(smsCount * smsRate * 100) / 100;
+  state.sms = smsOn ? smsBase : 0;
+
+  document.getElementById('smsRangeLabel').textContent = fmtInt(smsCount);
+  document.getElementById('smsBaseRangeLabel').textContent = fmtInt(smsBaseContacts);
+  document.getElementById('smsDerived').textContent = fmtInt(smsSuggested);
+  document.getElementById('smsRateNote').textContent = smsCount > 0 ? ` · stawka ${smsRate.toLocaleString('pl-PL', {minimumFractionDigits:2})} zł/SMS` : '';
+  document.getElementById('smsPriceDisplay').textContent = fmt(smsBase);
+  document.getElementById('smsBody').className = 'mcard-body' + (smsOn ? '' : ' disabled');
+  setFill(smsSliderEl, document.getElementById('smsFill'));
+  setFill(smsBaseSliderEl, document.getElementById('smsBaseFill'));
+
+  // WhatsApp
+  const waOn = document.getElementById('waToggle').checked;
+  state.waOn = waOn;
+  const waSliderEl = document.getElementById('waSlider');
+  const waCount = Math.max(0, Math.round(parseFloat(document.getElementById('waUnits').value) || 0));
+  waSliderEl.value = nearestSnapIdx(WA_SNAPS, waCount);
+  const waRate = waCount > 0 ? getRate(waCount, WA_TIERS) : 0;
+  const waBase = Math.round(waCount * waRate * 100) / 100;
+  state.wa = waOn ? waBase : 0;
+
+  document.getElementById('waRangeLabel').textContent = fmtInt(waCount);
+  document.getElementById('waPriceDisplay').textContent = fmt(waBase);
+  document.getElementById('waBody').className = 'mcard-body' + (waOn ? '' : ' disabled');
+  setFill(waSliderEl, document.getElementById('waFill'));
+
+  // edrone Reviews
+  const recOn = document.getElementById('recToggle').checked;
+  state.recOn = recOn;
+  const recSliderEl = document.getElementById('recSlider');
+  const recCount = Math.max(0, Math.round(parseFloat(document.getElementById('recUnits').value) || 0));
+  recSliderEl.value = nearestSnapIdx(REC_SNAPS, recCount);
+  const recBase = calcRecPrice(recCount);
+  state.rec = recOn ? recBase : 0;
+
+  document.getElementById('recRangeLabel').textContent = fmtInt(recCount);
+  document.getElementById('recPriceDisplay').textContent = fmt(recBase);
+  document.getElementById('recBody').className = 'mcard-body' + (recOn ? '' : ' disabled');
+  setFill(recSliderEl, document.getElementById('recFill'));
+
+  // edrone AI chat
+  const aiOn = document.getElementById('aiToggle').checked;
+  state.aiOn = aiOn;
+  const aiSliderEl = document.getElementById('aiSlider');
+  const aiCount = Math.max(0, Math.round(parseFloat(document.getElementById('aiUnits').value) || 0));
+  aiSliderEl.value = nearestSnapIdx(AI_SNAPS, aiCount);
+  const aiBase = calcAiPrice(aiCount);
+  state.ai = aiOn ? aiBase : 0;
+
+  document.getElementById('aiRangeLabel').textContent = fmtInt(aiCount);
+  document.getElementById('aiPriceDisplay').textContent = fmt(aiBase);
+  document.getElementById('aiBody').className = 'mcard-body' + (aiOn ? '' : ' disabled');
+  setFill(aiSliderEl, document.getElementById('aiFill'));
+
+  // Ramki rekomendacji AI
+  const rfOn = document.getElementById('rfToggle').checked;
+  state.rfOn = rfOn;
+  const rfSliderEl = document.getElementById('rfSlider');
+  const rfCount = Math.max(0, Math.round(parseFloat(document.getElementById('rfUnits').value) || 0));
+  rfSliderEl.value = nearestSnapIdx(RF_SNAPS, rfCount);
+  const rfBase = calcRfPrice(rfCount);
+  state.rf = rfOn ? rfBase : 0;
+
+  document.getElementById('rfRangeLabel').textContent = fmtInt(rfCount);
+  document.getElementById('rfPriceDisplay').textContent = fmt(rfBase);
+  document.getElementById('rfBody').className = 'mcard-body' + (rfOn ? '' : ' disabled');
+  setFill(rfSliderEl, document.getElementById('rfFill'));
+
+  // Stats
+  const multiplier = INDUSTRY_MULTIPLIERS[industry];
+  const statsSection = document.getElementById('statsSection');
+  const total = state.lic + state.sms + state.wa + state.rec + state.ai + state.rf;
+
+  if (industry && multiplier) {
+    const smsRev = smsOn ? smsRevenue(smsCount) : 0;
+    const waRev = waOn ? waRevenue(waCount) : 0;
+    const month12 = REVENUE_BY_MONTH[licMaxToRevBand(licMax)][11]; // 12th month of the chart
+    const revenue = Math.round(month12 + smsRev + waRev);
+    const roi = state.lic > 0 ? Math.round((revenue / state.lic) * 100) : 0;
+    document.getElementById('statRevenue').textContent = fmtInt(revenue) + ' zł';
+    document.getElementById('statRoi').textContent = roi.toLocaleString('pl-PL') + '%';
+
+    // Time to ROI
+    const band = licMaxToBand(licMax);
+    const industryTtr = TTR_DATA[industry];
+    const ttrDays = (industryTtr && industryTtr[band] != null)
+      ? industryTtr[band]
+      : 42; // overall median fallback
+    document.getElementById('statTtr').textContent = ttrDays.toLocaleString('pl-PL') + ' dni';
+    const impact = IMPACT_RATE[industry];
+    document.getElementById('statImpact').textContent = impact != null ? Math.round(impact * 100) + '%' : '—';
+    document.querySelectorAll('#ttrTbody tr').forEach(tr =>
+      tr.classList.toggle('cur', tr.dataset.ind === industry));
+
+    document.getElementById('statsPretitle').textContent =
+      `Branża: ${industry} · Baza: ${licLabel} kontaktów`;
+    renderRevChart(licMax, licLabel, total, smsRev, waRev);
+    renderLicChart(licMax, licDisc);
+
+    const aov = AOV_DATA[industry];
+    if (aov) {
+      const withE = aov[0], withoutE = aov[1];
+      const diff = withE - withoutE;
+      const pct = withoutE > 0 ? (diff / withoutE) * 100 : 0;
+      const money = v => v.toLocaleString('pl-PL', {minimumFractionDigits:2, maximumFractionDigits:2}) + ' zł';
+      const sign = diff >= 0 ? '+' : '−';
+      document.getElementById('aovWithout').textContent = money(withoutE);
+      document.getElementById('aovWith').textContent = money(withE);
+      document.getElementById('aovDiff').textContent = sign + Math.abs(pct).toFixed(1).replace('.', ',') + '%';
+      document.getElementById('aovDiffLab').textContent = `różnica (${sign}${money(Math.abs(diff))})`;
+      const cell = document.getElementById('aovDiffCell');
+      cell.classList.toggle('up', diff >= 0);
+      cell.classList.toggle('down', diff < 0);
+      document.getElementById('aovCompare').style.display = 'block';
+    } else {
+      document.getElementById('aovCompare').style.display = 'none';
+    }
+
+    const split = REV_SPLIT[industry];
+    if (split) {
+      document.getElementById('splitSub').style.width = split[0] + '%';
+      document.getElementById('splitUnk').style.width = split[1] + '%';
+      document.getElementById('splitSub').textContent = split[0].toLocaleString('pl-PL') + '%';
+      document.getElementById('splitUnk').textContent = split[1].toLocaleString('pl-PL') + '%';
+      document.getElementById('splitSubPct').textContent = split[0].toLocaleString('pl-PL') + '%';
+      document.getElementById('splitUnkPct').textContent = split[1].toLocaleString('pl-PL') + '%';
+    }
+    const per = AVG_PER1000[industry];
+    if (per) {
+      document.getElementById('per1000Sub').textContent = fmtInt(per[0]) + ' zł';
+      document.getElementById('per1000Unk').textContent = fmtInt(per[1]) + ' zł';
+    }
+    document.getElementById('statusSection').style.display = (split || per) ? 'block' : 'none';
+
+    renderChannelPie(industry, month12);
+    renderPackages(industry, licMax);
+
+    const scen = ENGAGEMENTS[industry];
+    if (scen && scen.length) {
+      document.getElementById('scenList').innerHTML = scen.map(s =>
+        `<div class="scen-row"><span class="scen-name">${s[0]}</span><span class="scen-bar"><span class="scen-fill" style="width:${Math.min(100, s[1]).toFixed(1)}%"></span></span><span class="scen-pct">${s[1].toLocaleString('pl-PL')}%</span></div>`
+      ).join('');
+      document.getElementById('scenSection').style.display = 'block';
+    } else {
+      document.getElementById('scenSection').style.display = 'none';
+    }
+
+    const scenSms = ENGAGEMENTS_SMS[industry];
+    if (scenSms && scenSms.length) {
+      document.getElementById('scenSmsList').innerHTML = scenSms.map(s =>
+        `<div class="scen-row"><span class="scen-name">${s[0]}</span><span class="scen-bar"><span class="scen-fill" style="width:${Math.min(100, s[1]).toFixed(1)}%"></span></span><span class="scen-pct">${s[1].toLocaleString('pl-PL')}%</span></div>`
+      ).join('');
+      document.getElementById('scenSmsSection').style.display = 'block';
+    } else {
+      document.getElementById('scenSmsSection').style.display = 'none';
+    }
+
+    document.getElementById('scenWaList').innerHTML = ENGAGEMENTS_WA.map(s =>
+      `<div class="scen-row"><span class="scen-name">${s[0]}</span><span class="scen-bar"><span class="scen-fill" style="width:${Math.min(100, s[1]).toFixed(1)}%"></span></span><span class="scen-pct">${s[1].toLocaleString('pl-PL')}%</span></div>`
+    ).join('');
+    document.getElementById('scenWaSection').style.display = 'block';
+    statsSection.classList.add('visible');
+  } else {
+    statsSection.classList.remove('visible');
+    document.getElementById('packagesSection').style.display = 'none';
+  }
+
+  // Summary
+  document.getElementById('summaryTotal').textContent = fmt(total);
+  document.getElementById('summaryTotalBig').textContent = fmt(total);
+
+  setSumValue('sumLic', licPrice, licFinal, licDisc);
+  document.getElementById('sumLicSub').textContent = licLabel + ' kontaktów' + (licDisc > 0 ? ` (−${licDisc}%)` : '');
+
+  if (smsOn) {
+    document.getElementById('sumSms').textContent = fmt(state.sms);
+    document.getElementById('sumSms').className = 'srow-value';
+    document.getElementById('sumSmsSub').textContent = `${fmtInt(smsCount)} SMS × ${smsRate.toFixed(2)} zł`;
+  } else {
+    document.getElementById('sumSms').textContent = 'wyłączony';
+    document.getElementById('sumSms').className = 'srow-value off';
+    document.getElementById('sumSmsSub').textContent = '';
+  }
+
+  if (waOn) {
+    document.getElementById('sumWa').textContent = fmt(state.wa);
+    document.getElementById('sumWa').className = 'srow-value';
+    document.getElementById('sumWaSub').textContent = `${fmtInt(waCount)} msg × ${waRate.toFixed(2)} zł`;
+  } else {
+    document.getElementById('sumWa').textContent = 'wyłączony';
+    document.getElementById('sumWa').className = 'srow-value off';
+    document.getElementById('sumWaSub').textContent = '';
+  }
+
+  if (recOn) {
+    document.getElementById('sumRec').textContent = recCount === 0 ? fmt(0) : fmt(state.rec);
+    document.getElementById('sumRec').className = 'srow-value';
+    document.getElementById('sumRecSub').textContent = recCount > 0
+      ? (recCount <= 150
+          ? `${fmtInt(recCount)} zamówień · 49 zł`
+          : recCount <= 500
+            ? `${fmtInt(recCount)} zamówień · 49 + 149 zł`
+            : recCount <= 1000
+              ? `${fmtInt(recCount)} zamówień · 49 + 149 + 299 zł`
+              : `${fmtInt(recCount)} zamówień · 49 + 149 + 299 zł + ${fmtInt(recCount - 1000)} × 0,29 zł`)
+      : '';
+  } else {
+    document.getElementById('sumRec').textContent = 'wyłączony';
+    document.getElementById('sumRec').className = 'srow-value off';
+    document.getElementById('sumRecSub').textContent = '';
+  }
+
+  if (aiOn) {
+    document.getElementById('sumAi').textContent = aiCount === 0 ? fmt(0) : fmt(state.ai);
+    document.getElementById('sumAi').className = 'srow-value';
+    document.getElementById('sumAiSub').textContent = aiCount > 0 ? `${fmtInt(aiCount)} konw. × ${getRate(aiCount, AI_TIERS).toLocaleString('pl-PL', {minimumFractionDigits:2})} zł` : '';
+  } else {
+    document.getElementById('sumAi').textContent = 'wyłączony';
+    document.getElementById('sumAi').className = 'srow-value off';
+    document.getElementById('sumAiSub').textContent = '';
+  }
+
+  if (rfOn) {
+    document.getElementById('sumRf').textContent = rfCount === 0 ? fmt(0) : fmt(state.rf);
+    document.getElementById('sumRf').className = 'srow-value';
+    document.getElementById('sumRfSub').textContent = rfCount > 0
+      ? `${fmtInt(rfCount)} wyświetleń / mc`
+      : '';
+  } else {
+    document.getElementById('sumRf').textContent = 'wyłączony';
+    document.getElementById('sumRf').className = 'srow-value off';
+    document.getElementById('sumRfSub').textContent = '';
+  }
+}
+
+// ── Events ────────────────────────────────────────────────────────────────
+
+['licSlider'].forEach(id =>
+  document.getElementById(id).addEventListener('input', recalc)
+);
+// SMS / WhatsApp: suwak ustawia pole na wartość „snap"; pole przyjmuje dowolną liczbę
+document.getElementById('smsSlider').addEventListener('input', e => {
+  document.getElementById('smsUnits').value = SMS_SNAPS[parseInt(e.target.value)];
+  recalc();
+});
+document.getElementById('waSlider').addEventListener('input', e => {
+  document.getElementById('waUnits').value = WA_SNAPS[parseInt(e.target.value)];
+  recalc();
+});
+document.getElementById('smsUnits').addEventListener('input', recalc);
+document.getElementById('waUnits').addEventListener('input', recalc);
+document.getElementById('smsNewsletter').addEventListener('change', recalc);
+document.getElementById('smsBaseSlider').addEventListener('input', e => {
+  document.getElementById('smsBaseUnits').value = SMS_CONTACT_SNAPS[parseInt(e.target.value)];
+  recalc();
+});
+document.getElementById('smsBaseUnits').addEventListener('input', recalc);
+document.getElementById('smsPackageBtn').addEventListener('click', () => {
+  const ind = document.getElementById('industrySelect').value;
+  const nl = document.getElementById('smsNewsletter').checked;
+  const base = Math.max(0, Math.round(parseFloat(document.getElementById('smsBaseUnits').value) || 0));
+  document.getElementById('smsUnits').value = deriveSmsCount(base, nl, ind);
+  recalc();
+});
+document.getElementById('pkgBasicBtn').addEventListener('click', () => {
+  ['smsToggle','waToggle','recToggle','aiToggle'].forEach(id => { document.getElementById(id).checked = false; });
+  const mk = document.getElementById('edroneMark'); if (mk) mk.classList.remove('aligned');
+  recalc();
+});
+document.getElementById('pkgFullBtn').addEventListener('click', () => {
+  const ind = document.getElementById('industrySelect').value;
+  const contacts = LIC_SNAPS[parseInt(document.getElementById('licSlider').value)];
+  const smsManual = Math.max(0, Math.round(parseFloat(document.getElementById('smsUnits').value) || 0));
+  const v = recommendedVolumes(ind, contacts);
+  if (smsManual === 0) {
+    document.getElementById('smsNewsletter').checked = true;
+    document.getElementById('smsBaseUnits').value = contacts;
+    document.getElementById('smsUnits').value = v.sms;
+  }
+  document.getElementById('recUnits').value = v.orders;
+  document.getElementById('aiUnits').value = v.conv;
+  document.getElementById('smsToggle').checked = v.sms > 0;
+  document.getElementById('recToggle').checked = v.orders > 0;
+  document.getElementById('aiToggle').checked = v.conv > 0;
+  document.getElementById('waToggle').checked = false;
+  const mk = document.getElementById('edroneMark'); if (mk) mk.classList.add('aligned');
+  recalc();
+});
+document.getElementById('licPriceDisplay').addEventListener('dblclick', () => {
+  const r = document.getElementById('discountRow');
+  r.style.display = r.style.display === 'none' ? 'flex' : 'none';
+});
+// Reviews / AI chat / Ramki: suwak ustawia pole na wartość „snap"; pole przyjmuje dowolną liczbę
+document.getElementById('recSlider').addEventListener('input', e => {
+  document.getElementById('recUnits').value = REC_SNAPS[parseInt(e.target.value)];
+  recalc();
+});
+document.getElementById('aiSlider').addEventListener('input', e => {
+  document.getElementById('aiUnits').value = AI_SNAPS[parseInt(e.target.value)];
+  recalc();
+});
+document.getElementById('rfSlider').addEventListener('input', e => {
+  document.getElementById('rfUnits').value = RF_SNAPS[parseInt(e.target.value)];
+  recalc();
+});
+document.getElementById('recUnits').addEventListener('input', recalc);
+document.getElementById('aiUnits').addEventListener('input', recalc);
+document.getElementById('rfUnits').addEventListener('input', recalc);
+['smsToggle','waToggle','recToggle','aiToggle','rfToggle'].forEach(id =>
+  document.getElementById(id).addEventListener('change', recalc)
+);
+buildIndustryTiles();
+buildTtrTable();
+
+function initCollapsibles() {
+  document.querySelectorAll('.mcard.collapsible .mcard-head').forEach(head => {
+    head.addEventListener('click', () => {
+      head.closest('.mcard').classList.toggle('collapsed');
+    });
+  });
+}
+initCollapsibles();
+document.getElementById('licDiscount').addEventListener('input', recalc);
+
+recalc();
+
+// ── Copy ──────────────────────────────────────────────────────────────────
+
+function copyQuote() {
+  const licIdx = parseInt(document.getElementById('licSlider').value);
+  const licMax = LIC_SNAPS[licIdx];
+  const licMin = licIdx === 0 ? 0 : LICENSE_TIERS[licIdx][0];
+  const industry = document.getElementById('industrySelect').value;
+  const smsCount = Math.max(0, Math.round(parseFloat(document.getElementById('smsUnits').value) || 0));
+  const waCount  = Math.max(0, Math.round(parseFloat(document.getElementById('waUnits').value) || 0));
+  const recCount = Math.max(0, Math.round(parseFloat(document.getElementById('recUnits').value) || 0));
+  const aiCount  = Math.max(0, Math.round(parseFloat(document.getElementById('aiUnits').value) || 0));
+  const smsRate  = getRate(smsCount, SMS_TIERS);
+  const waRate   = getRate(waCount, WA_TIERS);
+
+  const total = state.lic + state.sms + state.wa + state.rec + state.ai + state.rf;
+  const licLabel = licIdx === 0 ? `do ${fmtInt(licMax)}` : `${fmtInt(licMin)}–${fmtInt(licMax)}`;
+
+  const lines = [
+    'WYCENA EDRONE — miesięczna, netto PLN',
+    ...(industry ? [`Branża: ${industry}`] : []),
+    '─'.repeat(40),
+    `Licencja (${licLabel} kontaktów):`,
+    `  ${fmt(state.lic)}`,
+  ];
+  if (state.smsOn && smsCount > 0)
+    lines.push(`SMS (${fmtInt(smsCount)} × ${smsRate.toFixed(2)} zł):\n  ${fmt(state.sms)}`);
+  if (state.waOn && waCount > 0)
+    lines.push(`WhatsApp (${fmtInt(waCount)} × ${waRate.toFixed(2)} zł):\n  ${fmt(state.wa)}`);
+  if (state.recOn && recCount > 0)
+    lines.push(`edrone Reviews (${fmtInt(recCount)} zamówień):\n  ${fmt(state.rec)}`);
+  if (state.aiOn && aiCount > 0)
+    lines.push(`edrone AI chat (${fmtInt(aiCount)} konwersacji):\n  ${fmt(state.ai)}`);
+  const rfCount2 = Math.max(0, Math.round(parseFloat(document.getElementById('rfUnits').value) || 0));
+  if (state.rfOn && rfCount2 > 0)
+    lines.push(`Ramki rekomendacji AI (${fmtInt(rfCount2)} wyświetleń):\n  ${fmt(state.rf)}`);
+  lines.push('─'.repeat(40));
+  lines.push(`RAZEM: ${fmt(total)}`);
+  lines.push('\nCeny netto, bez VAT.');
+
+  navigator.clipboard.writeText(lines.join('\n')).then(() => {
+    const btn = document.getElementById('copyBtn');
+    btn.textContent = '✓ Skopiowano!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Skopiuj wycenę'; btn.classList.remove('copied'); }, 2500);
+  });
+}
+
+// ── Podsumowanie spotkania (AI) ─────────────────────────────────────────────
+const round2 = n => Math.round(n * 100) / 100;
+const round1 = n => Math.round(n * 10) / 10;
+
+function gatherDeal() {
+  const industry = document.getElementById('industrySelect').value;
+  const licIdx = parseInt(document.getElementById('licSlider').value);
+  const licMax = LIC_SNAPS[licIdx];
+  const licMin = licIdx === 0 ? 0 : LICENSE_TIERS[licIdx][0];
+  const licLabel = licIdx === 0 ? `do ${fmtInt(licMax)}` : `${fmtInt(licMin)}–${fmtInt(licMax)}`;
+  const smsCount = Math.max(0, Math.round(parseFloat(document.getElementById('smsUnits').value) || 0));
+  const smsNewsletter = document.getElementById('smsNewsletter').checked;
+  const smsBaseContacts = Math.max(0, Math.round(parseFloat(document.getElementById('smsBaseUnits').value) || 0));
+  const waCount  = Math.max(0, Math.round(parseFloat(document.getElementById('waUnits').value) || 0));
+  const recCount = Math.max(0, Math.round(parseFloat(document.getElementById('recUnits').value) || 0));
+  const aiCount  = Math.max(0, Math.round(parseFloat(document.getElementById('aiUnits').value) || 0));
+  const rfCount  = Math.max(0, Math.round(parseFloat(document.getElementById('rfUnits').value) || 0));
+  const total = state.lic + state.sms + state.wa + state.rec + state.ai + state.rf;
+
+  const moduly = [{ nazwa: 'Licencja', opis: `${licLabel} kontaktów`, cena_mies_zl: round2(state.lic) }];
+  if (state.smsOn && smsCount > 0) moduly.push({ nazwa: 'SMS', ilosc_mies: smsCount, kontakty_w_bazie: smsBaseContacts, typ: smsNewsletter ? 'SMS Newsletter' : 'Engagement', cena_mies_zl: round2(state.sms) });
+  if (state.waOn && waCount > 0)  moduly.push({ nazwa: 'WhatsApp', ilosc_mies: waCount, cena_mies_zl: round2(state.wa) });
+  if (state.recOn && recCount > 0) moduly.push({ nazwa: 'edrone Reviews', zamowien_mies: recCount, cena_mies_zl: round2(state.rec) });
+  if (state.aiOn && aiCount > 0)  moduly.push({ nazwa: 'edrone AI chat', konwersacji_mies: aiCount, cena_mies_zl: round2(state.ai) });
+  if (state.rfOn && rfCount > 0)  moduly.push({ nazwa: 'Ramki rekomendacji AI', wyswietlen_mies: rfCount, cena_mies_zl: round2(state.rf) });
+
+  const d = {
+    branza: INDUSTRY_LABELS[industry] || industry,
+    baza_kontaktow: licLabel,
+    oferta_mies_netto_zl: round2(total),
+    moduly,
+    benchmarki_przychodu: { na_1000_sms_zl: 5100, na_1000_whatsapp_zl: 6510, na_1000_automatyzacji_zl: 4077, na_1000_newsletterow_zl: 700 },
+    top_automatyzacje_whatsapp: ENGAGEMENTS_WA.map(x => ({ nazwa: x[0], proc: x[1] })),
+  };
+  if (industry) {
+    const aov = AOV_DATA[industry];
+    if (aov) d.aov = { z_edrone_zl: aov[0], bez_edrone_zl: aov[1], wzrost_proc: round1((aov[0] / aov[1] - 1) * 100) };
+    const sp = REV_SPLIT[industry];
+    if (sp) d.udzial_przychodu = { subskrybenci_proc: sp[0], spoza_newslettera_proc: sp[1] };
+    const per = AVG_PER1000[industry];
+    if (per) d.sredni_mies_przychod = { z_1000_subskrybentow_zl: per[0], z_1000_nieznanych_zl: per[1] };
+    const ch = CHANNEL_MIX[industry];
+    if (ch) d.udzial_kanalow = ch.map(c => ({ kanal: c[0], proc: c[1] }));
+    const e = ENGAGEMENTS[industry];
+    if (e) d.top_automatyzacje = e.slice(0, 3).map(x => ({ nazwa: x[0], proc: x[1] }));
+    const es = ENGAGEMENTS_SMS[industry];
+    if (es) d.top_automatyzacje_sms = es.map(x => ({ nazwa: x[0], proc: x[1] }));
+    const ttr = TTR_DATA[industry];
+    if (ttr) d.czas_do_roi_dni = ttr[licMaxToBand(licMax)];
+  }
+  return d;
+}
+
+function handleTranscriptFile(file) {
+  if (!file) return;
+  const ta = document.getElementById('transcriptInput');
+  const name = file.name.toLowerCase();
+  if (name.endsWith('.docx')) {
+    if (!window.mammoth) { ta.placeholder = 'Nie udało się wczytać .docx — wklej tekst ręcznie.'; return; }
+    file.arrayBuffer()
+      .then(buf => window.mammoth.extractRawText({ arrayBuffer: buf }))
+      .then(r => { ta.value = (r.value || '').trim(); })
+      .catch(() => { ta.placeholder = 'Błąd odczytu .docx — wklej tekst ręcznie.'; });
+  } else {
+    const r = new FileReader();
+    r.onload = e => { ta.value = String(e.target.result).trim(); };
+    r.readAsText(file);
+  }
+}
+
+async function generateSummary() {
+  const transcript = document.getElementById('transcriptInput').value.trim();
+  const out = document.getElementById('summaryOutput');
+  const btn = document.getElementById('genSummaryBtn');
+  const copyBtn = document.getElementById('copySummaryBtn');
+  const industry = document.getElementById('industrySelect').value;
+
+  out.style.display = 'block';
+  if (!industry) { out.value = 'Najpierw wybierz branżę klienta u góry kalkulatora.'; copyBtn.style.display = 'none'; return; }
+  if (!transcript) { out.value = 'Wgraj lub wklej transkrypcję rozmowy.'; copyBtn.style.display = 'none'; return; }
+
+  btn.disabled = true; btn.textContent = 'Generuję…';
+  out.value = 'Analizuję transkrypcję i dane branżowe…';
+  copyBtn.style.display = 'none';
+
+  const deal = gatherDeal();
+  const prompt =
+`Jesteś doświadczonym konsultantem sprzedaży edrone (platforma marketing automation i CRM dla e-commerce). Na podstawie transkrypcji rozmowy z klientem oraz danych edrone dla jego branży i przygotowanej oferty napisz krótki e-mail podsumowujący spotkanie.
+
+Wytyczne:
+- Pisz po polsku, krótko i zwięźle (maks. ok. 180 słów).
+- Wykorzystaj TYLKO te parametry i dane, o których klient realnie mówił podczas rozmowy (jego potrzeby, cele, bóle, wspomniane kanały i funkcje). Resztę pomiń.
+- Każdą liczbę połącz z konkretną KORZYŚCIĄ dla klienta — nie podawaj samej liczby, tylko co ona dla niego oznacza.
+- Ton ciepły, partnerski, zachęcający do rozpoczęcia współpracy — bez nachalności i pustych superlatywów.
+- Zacznij jednym zdaniem nawiązującym do rozmowy. Zakończ jasnym, konkretnym następnym krokiem.
+- Liczby traktuj jako średnie/benchmarki branżowe edrone, nie jako gwarancję wyniku.
+- Zwróć WYŁĄCZNIE e-mail w formacie: pierwsza linia „Temat: …", potem treść. Bez żadnych komentarzy ani wyjaśnień.
+
+DANE OFERTY I BRANŻY (JSON; użyj tylko trafnych do rozmowy):
+${JSON.stringify(deal, null, 2)}
+
+TRANSKRYPCJA ROZMOWY:
+${transcript}`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 1000, messages: [{ role: 'user', content: prompt }] })
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    const text = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('\n').trim();
+    out.value = text || 'Model nie zwrócił treści — spróbuj ponownie.';
+    if (text) copyBtn.style.display = 'inline-flex';
+  } catch (e) {
+    out.value = 'Nie udało się wygenerować e-maila.\n\nFunkcja działa w podglądzie Claude. Na wdrożonej stronie (GitHub Pages) wymaga skierowania zapytania na własny backend edrone z kluczem API — klucza nie można trzymać w kodzie publicznej strony.\n\nSzczegóły: ' + e.message;
+  } finally {
+    btn.disabled = false; btn.textContent = 'Generuj e-mail';
+  }
+}
+
+function copySummary() {
+  const t = document.getElementById('summaryOutput').value;
+  if (!t) return;
+  navigator.clipboard.writeText(t).then(() => {
+    const b = document.getElementById('copySummaryBtn');
+    b.textContent = '✓ Skopiowano!';
+    setTimeout(() => { b.textContent = 'Kopiuj e-mail'; }, 2000);
+  });
+}
+
+document.getElementById('transcriptFile').addEventListener('change', e => handleTranscriptFile(e.target.files[0]));
+document.getElementById('genSummaryBtn').addEventListener('click', generateSummary);
+document.getElementById('copySummaryBtn').addEventListener('click', copySummary);
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+
+</body>
+</html>
