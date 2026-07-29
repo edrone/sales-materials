@@ -2441,53 +2441,15 @@ function handleTranscriptFile(file) {
 async function generateSummary() {
   const transcript = document.getElementById('transcriptInput').value.trim();
   const out = document.getElementById('summaryOutput');
-  const btn = document.getElementById('genSummaryBtn');
   const copyBtn = document.getElementById('copySummaryBtn');
   const industry = document.getElementById('industrySelect').value;
 
   out.style.display = 'block';
-  if (!industry) { out.value = 'Najpierw wybierz branżę klienta u góry kalkulatora.'; copyBtn.style.display = 'none'; return; }
-  if (!transcript) { out.value = 'Wgraj lub wklej transkrypcję rozmowy.'; copyBtn.style.display = 'none'; return; }
-
-  btn.disabled = true; btn.textContent = 'Generuję…';
-  out.value = 'Analizuję transkrypcję i dane branżowe…';
   copyBtn.style.display = 'none';
+  if (!industry) { out.value = 'Najpierw wybierz branżę klienta u góry kalkulatora.'; return; }
+  if (!transcript) { out.value = 'Wgraj lub wklej transkrypcję rozmowy.'; return; }
 
-  const deal = gatherDeal();
-  const prompt =
-`Jesteś doświadczonym konsultantem sprzedaży edrone (platforma marketing automation i CRM dla e-commerce). Na podstawie transkrypcji rozmowy z klientem oraz danych edrone dla jego branży i przygotowanej oferty napisz krótki e-mail podsumowujący spotkanie.
-
-Wytyczne:
-- Pisz po polsku, krótko i zwięźle (maks. ok. 180 słów).
-- Wykorzystaj TYLKO te parametry i dane, o których klient realnie mówił podczas rozmowy (jego potrzeby, cele, bóle, wspomniane kanały i funkcje). Resztę pomiń.
-- Każdą liczbę połącz z konkretną KORZYŚCIĄ dla klienta — nie podawaj samej liczby, tylko co ona dla niego oznacza.
-- Ton ciepły, partnerski, zachęcający do rozpoczęcia współpracy — bez nachalności i pustych superlatywów.
-- Zacznij jednym zdaniem nawiązującym do rozmowy. Zakończ jasnym, konkretnym następnym krokiem.
-- Liczby traktuj jako średnie/benchmarki branżowe edrone, nie jako gwarancję wyniku.
-- Zwróć WYŁĄCZNIE e-mail w formacie: pierwsza linia „Temat: …", potem treść. Bez żadnych komentarzy ani wyjaśnień.
-
-DANE OFERTY I BRANŻY (JSON; użyj tylko trafnych do rozmowy):
-${JSON.stringify(deal, null, 2)}
-
-TRANSKRYPCJA ROZMOWY:
-${transcript}`;
-
-  try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 1000, messages: [{ role: 'user', content: prompt }] })
-    });
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    const data = await res.json();
-    const text = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('\n').trim();
-    out.value = text || 'Model nie zwrócił treści — spróbuj ponownie.';
-    if (text) copyBtn.style.display = 'inline-flex';
-  } catch (e) {
-    out.value = 'Nie udało się wygenerować e-maila.\n\nFunkcja działa w podglądzie Claude. Na wdrożonej stronie (GitHub Pages) wymaga skierowania zapytania na własny backend edrone z kluczem API — klucza nie można trzymać w kodzie publicznej strony.\n\nSzczegóły: ' + e.message;
-  } finally {
-    btn.disabled = false; btn.textContent = 'Generuj e-mail';
-  }
+  out.value = 'Generowanie maila z transkryptu jest w budowie (integracja z Fireflies przez Hermesa) — wróć tu wkrótce.';
 }
 
 function copySummary() {
