@@ -649,9 +649,38 @@
       .stat-divider { display: none; }
       .stat-value { font-size: 48px; }
     }
+    /* Przekierowanie do wersji w Hermesie — Olga 2026-08-04: ta strona
+       (GitHub Pages) jest wygaszana na rzecz /tools/kalkulator-oferty w
+       Hermesie (generacja maila z Fireflies + wysyłka). Blokuje interakcję
+       z resztą strony celowo — patrz [[project_keryx_calculator_integration]]. */
+    .hermes-redirect-overlay {
+      position: fixed; inset: 0; z-index: 999999;
+      background: var(--bg, #FAFAF0); display: flex; align-items: center;
+      justify-content: center; padding: 24px; text-align: center;
+    }
+    .hermes-redirect-card {
+      max-width: 480px; background: #FFFFFF; border: 1.5px solid var(--border);
+      border-radius: 16px; padding: 40px 36px; box-shadow: 0 8px 40px rgba(0,0,0,.08);
+    }
+    .hermes-redirect-card h1 { font-size: 22px; margin: 0 0 12px; color: var(--text); }
+    .hermes-redirect-card p { font-size: 14px; line-height: 1.6; color: var(--muted); margin: 0 0 24px; }
+    .hermes-redirect-btn {
+      display: inline-flex; align-items: center; gap: 8px; padding: 12px 28px;
+      border-radius: 10px; background: var(--text); color: #FFFFFF; font-weight: 700;
+      font-size: 14px; text-decoration: none;
+    }
+    .hermes-redirect-btn:hover { opacity: .85; }
   </style>
 </head>
 <body>
+
+<div class="hermes-redirect-overlay">
+  <div class="hermes-redirect-card">
+    <h1>Ten kalkulator przeniósł się do Hermesa</h1>
+    <p>Ta wersja (GitHub Pages) nie jest już aktualizowana — ceny mogą się różnić od aktualnych. Korzystaj z wersji w Hermesie: generuje mail z transkryptu (Fireflies) i wysyła go bezpośrednio.</p>
+    <a class="hermes-redirect-btn" href="https://hermes.edrone.me/tools/kalkulator-oferty">Przejdź do kalkulatora w Hermesie →</a>
+  </div>
+</div>
 
 <div class="topbar">
   <div class="topbar-logo">
