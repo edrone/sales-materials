@@ -495,24 +495,25 @@
     }
     .stats-grid {
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       gap: 0;
     }
-    .stat-block { flex: 1; padding: 0 8px; }
+    .stat-block { flex: 1; min-width: 0; padding: 0 8px; }
     .stat-divider {
       width: 1px;
       height: 100px;
       background: #E5E0D8;
       flex-shrink: 0;
-      margin: 0 40px;
+      margin: 0 24px;
     }
     .stat-value {
-      font-size: 64px;
+      font-size: 48px;
       font-weight: 900;
       color: #2E2E29;
-      letter-spacing: -2px;
+      letter-spacing: -1px;
       line-height: 1;
       margin-bottom: 16px;
+      white-space: nowrap;
     }
     .stat-label {
       font-size: 15px;
@@ -1849,7 +1850,9 @@ function setFill(slider, fillEl) {
   fillEl.style.width = pct + '%';
 }
 
-const PIE_COLORS = ['#C9A227', '#E0CC79', '#1C2E4A', '#2E2E29']; // 1. złoty, 2. jaśniejszy złoty, 3. granat, 4. czarny
+// Hermes chart palette (src/app/globals.css --chart-1..4), not an ad-hoc
+// gold/navy scheme — matches the design-system pass in PR #450.
+const PIE_COLORS = ['#FFFF8C', '#00FFE9', '#A583D5', '#F2AB7F'];
 function renderChannelPie(industry, baseRevenue) {
   const data = CHANNEL_MIX[industry];
   const sec = document.getElementById('pieSection');
