@@ -351,8 +351,8 @@
     .pkg-btn.primary { background: #2E2E29; color: #FFFFFF; }
     .pkg-btn.primary:hover { opacity: .88; }
     @media (max-width: 560px) { .packages-grid { grid-template-columns: 1fr; } }
-    .badge-wip { font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; background: #F0E6C8; color: #8A6D2F; white-space: nowrap; }
-    .wip-ico { vertical-align: -2px; margin-left: 5px; color: #B08D3A; }
+    .badge-wip { font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; background: #F5F3F0; color: #6B6B6B; white-space: nowrap; }
+    .wip-ico { vertical-align: -2px; margin-left: 5px; color: #6B6B6B; }
     .mcard-disabled { opacity: .72; }
     .mcard-disabled .toggle-switch { cursor: not-allowed; }
     .toggle-switch input:disabled ~ .toggle-track { opacity: .45; }
@@ -1925,9 +1925,11 @@ function renderPackages(industry, contacts) {
 
 const TTR_BANDS = ['0-5k','5k-10k','10k-50k','50k-100k','over 100k'];
 function ttrColor(v, min, max) {
+  // Hermes accent hue (edrone yellow #FFFF8C ≈ hsl(60,100%,78%)), not the
+  // old gold/amber (hue 43) — same light→dark = good→bad gradient logic.
   const t = max > min ? (v - min) / (max - min) : 0;
-  const L = 90 - t * 56; // mała wartość → jaśniejszy złoty; duża → ciemniejszy (gorszy)
-  return { bg: `hsl(43,72%,${L.toFixed(1)}%)`, fg: L < 52 ? '#FFFFFF' : '#3A2E08' };
+  const L = 88 - t * 56; // mała wartość → jaśniejszy żółty; duża → ciemniejszy (gorszy)
+  return { bg: `hsl(56,85%,${L.toFixed(1)}%)`, fg: L < 52 ? '#FFFFFF' : '#2E2E29' };
 }
 function buildTtrTable() {
   const tbody = document.getElementById('ttrTbody');
