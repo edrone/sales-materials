@@ -875,7 +875,7 @@
         <div class="mcard-head-row">
           <div>
             <div class="mcard-title">edrone Reviews</div>
-            <div class="mcard-desc">Zbieranie opinii po zakupie. Opłata kaskadowa (progi sumują się): do 150 → 49 zł, 151–500 → +149 zł, 501–1000 → +299 zł, powyżej 1000 → +0,29 zł za zamówienie.</div>
+            <div class="mcard-desc">Zbieranie opinii po zakupie. Opłata kaskadowa (ryczałt za bieżący próg, nie suma progów): do 150 → 49 zł, 151–500 → 149 zł, 501–1000 → 299 zł, powyżej 1000 → 299 zł + 0,29 zł za każde zamówienie w tym zakresie.</div>
           </div>
           <div class="mcard-head-right"><div class="badge-optional">Opcjonalny</div><span class="mcard-chevron"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></span></div>
         </div>
@@ -1733,11 +1733,12 @@ const REC_SNAPS = [
 
 // 49 zł for the first 150 orders, then 0.29 zł per order above 150
 function calcRecPrice(n) {
+  // Kwota ryczałtowa per próg, NIE suma niższych progów (edrone Reviews
+  // help center, art. "Jak działa cennik": 501–1000 i 1001+ mają tę samą
+  // kwotę ryczałtową 299 zł — próg zastępuje, nie dodaje się do poprzednich).
   if (n <= 0) return 0;
-  let price = 49;                             // do 150
-  if (n > 150) price += 149;                  // 151–500
-  if (n > 500) price += 299;                  // 501–1000
-  if (n > 1000) price += (n - 1000) * 0.29;   // powyżej 1000
+  let price = n <= 150 ? 49 : n <= 500 ? 149 : 299; // do 150 / 151–500 / 501+
+  if (n > 1000) price += (n - 1000) * 0.29;         // powyżej 1000, doliczane do ryczałtu 299
   return Math.round(price * 100) / 100;
 }
 
@@ -2196,10 +2197,10 @@ function recalc() {
       ? (recCount <= 150
           ? `${fmtInt(recCount)} zamówień · 49 zł`
           : recCount <= 500
-            ? `${fmtInt(recCount)} zamówień · 49 + 149 zł`
+            ? `${fmtInt(recCount)} zamówień · 149 zł`
             : recCount <= 1000
-              ? `${fmtInt(recCount)} zamówień · 49 + 149 + 299 zł`
-              : `${fmtInt(recCount)} zamówień · 49 + 149 + 299 zł + ${fmtInt(recCount - 1000)} × 0,29 zł`)
+              ? `${fmtInt(recCount)} zamówień · 299 zł`
+              : `${fmtInt(recCount)} zamówień · 299 zł + ${fmtInt(recCount - 1000)} × 0,29 zł`)
       : '';
   } else {
     document.getElementById('sumRec').textContent = 'wyłączony';
